@@ -12,7 +12,9 @@ from jobapi.types import JobData, JobState, JobView
 
 @pytest.fixture
 def app(path_work):
-    return init_fastapi(AppConfig(working_dir=path_work))
+    # We need to use ThreadPoolExecutor otherwise the upload request doesn't return until analysis has finished
+    # and we can't test cancelling a running job.
+    return init_fastapi(AppConfig(working_dir=path_work, workers=8))
 
 
 @pytest.fixture
@@ -36,7 +38,7 @@ async def test_api(test_client: AsyncClient, user_provided_data, path_data_test_
     assert job.state in [JobState.QUEUED, JobState.PROCESSING]
 
     # Wait until the processing is completed
-    job = await _wait_until_state_is_not(test_client, job, [JobState.QUEUED, JobState.PROCESSING])
+    job = await _wait_until_state_is_not(test_client, job, [JobState.QUEUED, JobState.PROCESSING], 15)
     assert job.state == JobState.COMPLETED
 
     # Check for valid result
@@ -102,7 +104,7 @@ async def test_api_cancel_running(test_client: AsyncClient, user_provided_data, 
 
     response = await test_client.post(f"/v1/dataspace/analysisjob/{job.job_id}/cancel")
     assert response.status_code == 204, response.text
-    job = await _wait_until_state_is_not(test_client, job, [JobState.CANCELLATION_REQUESTED])
+    job = await _wait_until_state_is_not(test_client, job, [JobState.CANCELLATION_REQUESTED], 10)
 
     # Check for status
     response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/status")
@@ -110,16 +112,17 @@ async def test_api_cancel_running(test_client: AsyncClient, user_provided_data, 
     assert job.state == JobState.CANCELLED
 
 
-async def _wait_until_state_is_not(client: AsyncClient, job: JobView, blocking_states: List[JobState]):
-    response = await client.get(f"/v1/dataspace/analysisjob/{job.job_id}/status")
-    job = extract_job_view(response)
-
-    while job.state in blocking_states:
+async def _wait_until_state_is_not(client: AsyncClient, job: JobView, blocking_states: List[JobState], timeout: float):
+    async with asyncio.timeout(timeout):
         response = await client.get(f"/v1/dataspace/analysisjob/{job.job_id}/status")
         job = extract_job_view(response)
-        await asyncio.sleep(1.0)
 
-    return job
+        while job.state in blocking_states:
+            response = await client.get(f"/v1/dataspace/analysisjob/{job.job_id}/status")
+            job = extract_job_view(response)
+            await asyncio.sleep(1.0)
+
+        return job
 
 
 def extract_job_view(response: Response) -> JobView:
