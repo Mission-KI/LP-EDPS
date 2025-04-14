@@ -169,15 +169,16 @@ class AnalysisJobManager:
 
 
 @contextmanager
-def init_file_logger(log_path: Path) -> Iterator[Logger]:
+def init_file_logger(log_path: Path, job_id: UUID) -> Iterator[Logger]:
     """Create a new logger that logs to the given file. File is closed on contextmanager exit."""
-    logger = getLogger("edps.jobapi")
+    logger = getLogger(f"edps.jobapi.{job_id}")
     logger.setLevel(logging.DEBUG)
     with closing(logging.FileHandler(log_path)) as file_handler:
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(name)s - %(message)s"))
         logger.addHandler(file_handler)
         yield logger
+        logger.removeHandler(file_handler)
 
 
 def create_executor(app_config: AppConfig) -> Optional[Executor]:
@@ -233,7 +234,7 @@ class AnalysisJobProcessor:
         async with job_repo.new_session() as session:
             job = await session.get_job(job_id)
             logger.info("Starting job %s...", job_id)
-            with init_file_logger(job.log_file) as job_logger:
+            with init_file_logger(job.log_file, job_id) as job_logger:
                 process_job_task = asyncio.create_task(self._process_job_worker(job, job_logger))
                 cancellation_listener_task = asyncio.create_task(self._cancellation_listener(job_id, job_repo))
 
