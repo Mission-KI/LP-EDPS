@@ -25,9 +25,10 @@ class JobState(str, Enum):
     FAILED = "FAILED"
     CANCELLATION_REQUESTED = "CANCELLATION_REQUESTED"
     CANCELLED = "CANCELLED"
+    DELETED = "DELETED"
 
 
-END_STATES = set([JobState.FAILED, JobState.CANCELLED, JobState.COMPLETED])
+END_STATES = set([JobState.FAILED, JobState.CANCELLED, JobState.COMPLETED, JobState.DELETED])
 
 
 class JobView(BaseModel):
@@ -38,7 +39,10 @@ class JobView(BaseModel):
 - QUEUED: job is queued for analyzation\n
 - PROCESSING: job is processing data\n
 - COMPLETED: job has completed successfully\n
-- FAILED: job has failed
+- FAILED: job has failed\n
+- CANCELLATION_REQUESTED: job cancellation requested by user\n
+- CANCELLED: job has been canceled\n
+- DELETED: job has been deleted
 """,
         default=JobState.WAITING_FOR_DATA,
     )

@@ -78,6 +78,8 @@ class AnalysisJobManager:
 
         async with self._job_repo.new_session() as session:
             job: Job = await session.get_job(job_id)
+            if job.state == JobState.DELETED:
+                raise ApiClientException(f"There are no logs because job is in state {job.state.value}.")
             return job.log_file
 
     async def get_report_file(self, job_id: UUID) -> Path:
@@ -153,6 +155,17 @@ class AnalysisJobManager:
                 data_file_path,
                 data_file_path.stat().st_size,
             )
+
+    async def delete_job(self, job_id: UUID):
+        async with self._job_repo.new_session() as session:
+            job: Job = await session.get_job(job_id)
+            if job.state == JobState.DELETED:
+                return
+            if job.state not in END_STATES:
+                raise ApiClientException(f"Job cannot be deleted because it's still in state {job.state.value}.")
+
+            shutil.rmtree(job.job_base_dir, ignore_errors=True)
+            job.set_state(JobState.DELETED, f"Deleted after job was in state {job.state.value}")
 
 
 @contextmanager

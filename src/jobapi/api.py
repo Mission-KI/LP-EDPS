@@ -159,4 +159,16 @@ def get_job_api_router(app_config: AppConfig):
         report_file = await job_manager.get_report_file(job_id)
         return FileResponse(report_file, media_type="application/pdf", filename=report_file.name)
 
+    @router.delete("/analysisjob/{job_id}", tags=[Tags.AnalysisJob], summary="Delete job")
+    async def delete_analysis_job(job_id: UUID) -> JobView:
+        """Deletes an analysis job.
+        This deletes the job working directory with all files including input, output, report and logs.
+        Updates the job state to DELETED.
+
+        Returns infos about the job including an ID.
+        """
+
+        await job_manager.delete_job(job_id)
+        return await job_manager.get_job_view(job_id)
+
     return router

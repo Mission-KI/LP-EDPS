@@ -49,6 +49,21 @@ async def test_api(test_client: AsyncClient, user_provided_data, path_data_test_
     response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/log")
     assert response.status_code == 200, response.text
 
+    # Delete job
+    response = await test_client.delete(f"/v1/dataspace/analysisjob/{job.job_id}")
+    assert response.status_code == 200, response.text
+    assert response.json()["state"] == "DELETED"
+
+    # Check for valid result - it's not available anymore
+    response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/result")
+    assert response.status_code == 400, response.text
+    # Check for report - it's not available anymore
+    response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/report")
+    assert response.status_code == 400, response.text
+    # Check for log - it's not available anymore
+    response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/log")
+    assert response.status_code == 400, response.text
+
 
 @pytest.mark.slow
 async def test_api_client_error(test_client: AsyncClient):
