@@ -9,6 +9,8 @@ authors = [
     { name = "Michael Wielpuetz", email = "mw@beebucket.de" },
     { name = "Daniel Eckstein", email = "de@beebucket.de" },
     { name = "Joshua Lauterbach", email = "jl@beebucket.de" },
+    { name = "Martin Kaeser", email = "martin.kaeser@exxcellent.de" },
+    { name = "Patrick Christ", email = "patrick.christ@exxcellent.de" },
 ]
 description = "Beebucket application to create Enhanced Dataset Profiles."
 readme = "README.md"
