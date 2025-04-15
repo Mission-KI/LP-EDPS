@@ -22,8 +22,6 @@ jobs:
                 python-version-file: '.python-version'
         -   name: Install
             run: |
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com/".insteadOf "git@github.com:"
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com".insteadOf "https://github.com"
                 uv sync --all-extras --dev
         -   name: mypy
             run: uv run mypy .
@@ -49,8 +47,6 @@ jobs:
                 python-version-file: '.python-version'
         -   name: Install
             run: |
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com/".insteadOf "git@github.com:"
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com".insteadOf "https://github.com"
                 uv sync --all-extras --dev
         -   name: Execute tests
             run: |

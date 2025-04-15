@@ -52,8 +52,6 @@ jobs:
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com/".insteadOf "git@github.com:"
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com".insteadOf "https://github.com"
                 pip install ${{ steps.download_wheel.outputs.download-path }}
         -   name: Generate OpenAPI Schema
             run: edps_export_openapi_schema --output ${{ env.OPENAPI_SCHEMA }}
@@ -80,8 +78,6 @@ jobs:
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com/".insteadOf "git@github.com:"
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com".insteadOf "https://github.com"
                 pip install ${{ steps.download_wheel.outputs.download-path }}[test]
         -   name: Run pip-licenses
             run: pip-licenses --format=csv --with-url --with-authors --order=license --output-file ${{ env.LICENSES_ARTIFACT_NAME }}
@@ -109,8 +105,6 @@ jobs:
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com/".insteadOf "git@github.com:"
-                git config --global url."https://${{ secrets.GIT_HUB_API_KEY }}@github.com".insteadOf "https://github.com"
                 pip install ${{ steps.download_wheel.outputs.download-path }}[test]
         -   name: Run pydantic markdown generator
             run: pydantic_markdown --model edps.Config --output ${{ env.CONFIG_README_ARTIFACT_NAME }}
