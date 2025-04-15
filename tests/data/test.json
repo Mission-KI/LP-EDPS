@@ -14,7 +14,9 @@
       "topping": [
         { "id": "5001", "type": "None" },
         { "id": "5002", "type": "Glazed" }
-      ]
+      ],
+      "extras": [],
+      "details": "Some fancy cake"
     },
     {
       "id": "0002",
@@ -29,7 +31,9 @@
       "topping": [
         { "id": "5001", "type": "None" },
         { "id": "5003", "type": "Chocolate" }
-      ]
+      ],
+      "extras": [],
+      "details": null
     }
   ]
 }

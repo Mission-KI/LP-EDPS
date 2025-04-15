@@ -1,5 +1,5 @@
 import json
-from typing import Any, AsyncIterator, Dict, Iterable, List, Tuple, Union
+from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Tuple, Union
 
 from extended_dataset_profile.models.v0.edp import SemiStructuredDataSet
 from genson import SchemaBuilder
@@ -52,8 +52,9 @@ def _detect_structured_data(schema_node: Dict[str, Any], path: str = "") -> Iter
             child_path = f"{path}.{prop_name}" if path else prop_name
             yield from _detect_structured_data(prop_schema, child_path)
     elif json_type == "array":
-        items_schema = schema_node.get("items", {})
-        if _get_json_type(items_schema) == "object":
+        # The items type cannot always be detected, e.g. if there is an empty list in the input data.
+        items_schema: Optional[dict] = schema_node.get("items")
+        if items_schema and _get_json_type(items_schema) == "object":
             yield items_schema, path
             yield from _detect_structured_data(items_schema, path)
 
@@ -86,10 +87,19 @@ def _extract_structured_data(json_data: JSONData, path: str | List[str]) -> Iter
             )
 
 
-def _get_json_type(schema_node: Dict[str, Any]) -> str:
+def _get_json_type(schema_node: Dict[str, Any]) -> Optional[str]:
     json_type = schema_node.get("type")
-    json_type = json_type.lower().strip() if json_type else ""
-    # Supported types in JSON schema: https://json-schema.org/understanding-json-schema/reference/type
-    if json_type not in ["array", "boolean", "integer", "null", "number", "object", "string"]:
-        raise RuntimeError("Found an invalid type in the JSON schema: %s", json_type)
-    return json_type
+    if json_type is None:
+        # There is not always a "type" field but maybe an "anyOf" field. We don't support this inhomogeneous case.
+        return None
+    elif isinstance(json_type, list):
+        # Union of primitive types, e.g. ["null", "string"]. This is not relevant as we only care about "array" and "object".
+        return None
+    elif isinstance(json_type, str):
+        json_type_str = json_type.lower().strip()
+        # Supported types in JSON schema: https://json-schema.org/understanding-json-schema/reference/type
+        if json_type_str not in ["array", "boolean", "integer", "null", "number", "object", "string"]:
+            raise RuntimeError(f"Found an invalid type in the JSON schema: '{json_type_str}'")
+        return json_type_str
+    else:
+        raise ValueError(f"Found an invalid type in the JSON schema: '{json_type}'")

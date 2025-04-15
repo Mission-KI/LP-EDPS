@@ -674,11 +674,11 @@ async def test_analyse_semi_structured_json(path_data_test_json, compute_asset_f
     assert len(edp.structuredDatasets) == 3
     table1_ds = edp.structuredDatasets[0]
     table1_headers = [col.name for col in table1_ds.all_columns]
-    assert set(table1_headers) == {"id", "type", "name", "ppu", "topping", "batters.batter"}
+    assert set(table1_headers) == {"id", "details", "extras", "type", "name", "ppu", "topping", "batters.batter"}
     assert table1_ds.rowCount == 2
-    assert table1_ds.columnCount == 6
+    assert table1_ds.columnCount == 8
     assert table1_ds.numericColumnCount == 2
-    assert table1_ds.stringColumnCount == 4
+    assert table1_ds.stringColumnCount == 6
     assert table1_ds.datetimeColumnCount == 0
     assert table1_ds.numericColumns[1].name == "ppu"
     assert table1_ds.numericColumns[1].dataType == "Float32"
