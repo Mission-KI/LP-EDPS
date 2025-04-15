@@ -6,7 +6,6 @@ on:
 
 env:
     OPENAPI_SCHEMA: edps_openapi_${{ github.ref_name }}.json
-    IMAGE_PATH: beebucket/edps
     WHEEL_NAME: edps.whl
     LICENSES_ARTIFACT_NAME: licenses.csv
     CONFIG_README_ARTIFACT_NAME: config_readme.md
@@ -120,59 +119,6 @@ jobs:
             with:
                 name: ${{ env.CONFIG_README_ARTIFACT_NAME }}
                 path: ${{ env.CONFIG_README_ARTIFACT_NAME }}
-            
-    build_and_release_docker:
-        runs-on: ubuntu-24.04
-        name: Build and Push EDPS docker image
-        needs:
-        -   build_wheel
-        timeout-minutes: 1440
-        env:
-            REGISTRY: docker.io
-        outputs:
-            dockerhub_reference: "${{ steps.meta.outputs.tags }}"
-        steps:
-        -   uses: docker/login-action@v3
-            with:
-                registry: ${{ env.REGISTRY }}
-                username: cicdcorebeebucket
-                password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-        -   uses: actions/checkout@v4
-        -   uses: actions/download-artifact@v4
-            id: download_wheel
-            with:
-                name: ${{ env.WHEEL_NAME }}
-                path: ${{ github.workspace }}/dist
-        -   uses: docker/setup-qemu-action@v3
-        -   uses: docker/setup-buildx-action@v3
-        -   name: Extract Docker metadata
-            id: meta
-            uses: docker/metadata-action@v5.5.1
-            with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_PATH }}
-                flavor: latest=false
-                tags: |
-                    type=ref,event=branch
-                    type=ref,event=tag
-                    type=ref,event=pr
-                    type=semver,pattern={{version}}
-        -   name: Build and push Docker image
-            id: build-and-push
-            uses: docker/build-push-action@v6
-            with:
-                context: .
-                file: docker/Dockerfile
-                platforms: |
-                    linux/amd64
-                build-args: |
-                    VERSION=${{ github.ref_name }}
-                secrets: |
-                    REPO_TOKEN=${{ secrets.GIT_HUB_API_KEY }}    
-                push: True
-                tags: ${{ steps.meta.outputs.tags }}
-                labels: ${{ steps.meta.outputs.labels }}
-                cache-from: type=gha
-                cache-to: type=gha,mode=max
 
     create_release:
         runs-on: ubuntu-24.04
@@ -180,7 +126,6 @@ jobs:
         needs:
         -   build_wheel
         -   generate_schemas
-        -   build_and_release_docker
         -   license_report
         -   configuration-readme
         env:
@@ -207,8 +152,6 @@ jobs:
         -   name: Release
             uses: softprops/action-gh-release@v2
             with:
-                body:
-                    "Dockerhub Reference (private): ${{ needs.build_and_release_docker.outputs.dockerhub_reference }}\n"
                 files: ${{ env.ARTIFACTS_DIR }}/*
                 fail_on_unmatched_files: true
                 draft: true
