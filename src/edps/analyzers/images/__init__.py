@@ -6,7 +6,7 @@ from typing import Optional
 import brisque
 import cv2
 import numpy as np
-from extended_dataset_profile.models.v0.edp import ImageColorMode, ImageDataSet, ImageDPI, Resolution
+from extended_dataset_profile import ImageColorMode, ImageDataSet, ImageDPI, Resolution
 from pandas import DataFrame
 from PIL.Image import fromarray as from_array
 from PIL.Image import open as open_image

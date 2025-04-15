@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from extended_dataset_profile.models.v0.edp import ImageColorMode, ImageDPI, Resolution
+from extended_dataset_profile import ImageColorMode, ImageDPI, Resolution
 from PIL.Image import open as open_image
 
 from edps.analyzers.images import ImageMetadata

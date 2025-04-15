@@ -13,7 +13,7 @@ from clevercsv.detect import DetectionMethod
 from clevercsv.dialect import SimpleDialect
 from clevercsv.encoding import get_encoding
 from clevercsv.potential_dialects import get_dialects as _get_dialects
-from extended_dataset_profile.models.v0.edp import StructuredDataSet
+from extended_dataset_profile import StructuredDataSet
 from pandas import DataFrame, read_csv, read_excel
 
 from edps.taskcontext import TaskContext

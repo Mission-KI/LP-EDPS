@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Awaitable, Callable, List, Optional
 
 import pytest
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     AudioDataSet,
+    Augmentation,
     DataSetType,
     ExtendedDatasetProfile,
     FileReference,
@@ -22,7 +23,6 @@ from edps.service import _compute_asset
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
 from edps.types import (
-    Augmentation,
     AugmentedColumn,
     ComputedEdpData,
     Config,

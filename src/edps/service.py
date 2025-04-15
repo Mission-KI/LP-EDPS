@@ -8,8 +8,8 @@ from warnings import warn
 
 import easyocr
 import static_ffmpeg
-from extended_dataset_profile import CURRENT_VERSION
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
+    CURRENT_VERSION,
     ArchiveDataSet,
     AudioDataSet,
     DatasetTreeNode,

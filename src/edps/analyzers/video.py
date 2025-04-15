@@ -1,7 +1,7 @@
 import warnings
 from typing import Any, Optional
 
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     Resolution,
     VideoDataSet,
     VideoPixelFormat,

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from extended_dataset_profile.models.v0.edp import AssetReference, DataSpace, ExtendedDatasetProfile, License, Publisher
+from extended_dataset_profile import AssetReference, DataSpace, ExtendedDatasetProfile, License, Publisher
 from pydantic import BaseModel, HttpUrl
 
 from edps.types import ComputedEdpData, UserProvidedEdpData

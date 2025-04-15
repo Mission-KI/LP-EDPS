@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 
 import numpy as np
-from extended_dataset_profile.models.v0.edp import ImageColorMode, ImageDataSet, ImageDPI, Resolution
+from extended_dataset_profile import ImageColorMode, ImageDataSet, ImageDPI, Resolution
 from PIL.Image import Image
 from PIL.Image import open as open_image
 

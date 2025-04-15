@@ -6,7 +6,7 @@ from typing import Any
 import ffmpeg
 import numpy as np
 import scipy
-from extended_dataset_profile.models.v0.edp import AudioDataSet
+from extended_dataset_profile import AudioDataSet
 from matplotlib.figure import figaspect
 from numpy import ndarray
 

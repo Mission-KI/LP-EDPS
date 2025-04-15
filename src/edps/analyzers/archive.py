@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from extended_dataset_profile.models.v0.edp import ArchiveDataSet
+from extended_dataset_profile import ArchiveDataSet
 
 from edps.compression import DECOMPRESSION_ALGORITHMS
 from edps.file import calculate_size, determine_file_type

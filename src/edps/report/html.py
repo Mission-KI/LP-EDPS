@@ -5,13 +5,15 @@ from io import BufferedIOBase
 from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     ArchiveDataSet,
     AudioDataSet,
     DatasetTreeNode,
     DateTimeColumn,
     DocumentDataSet,
+    ExtendedDatasetProfile,
     ImageDataSet,
+    JsonReference,
     NumericColumn,
     SemiStructuredDataSet,
     StringColumn,
@@ -19,17 +21,15 @@ from extended_dataset_profile.models.v0.edp import (
     UnstructuredTextDataSet,
     VideoDataSet,
 )
-from extended_dataset_profile.models.v0.json_reference import JsonReference
 from jinja2 import Environment, PackageLoader, Undefined
 from jinja2.exceptions import TemplateRuntimeError, UndefinedError
 from jinja2.utils import missing
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
-from edps import ExtendedDatasetProfile
-from edps.report.base import ReportGenerator, ReportInput
-from edps.taskcontext import TaskContext
-from edps.types import DataSet
+from ..report.base import ReportGenerator, ReportInput
+from ..taskcontext import TaskContext
+from ..types import DataSet
 
 
 class HtmlReportGenerator(ReportGenerator):

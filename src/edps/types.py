@@ -2,34 +2,14 @@ import html
 from datetime import datetime, timedelta
 from typing import Any, List, Optional, Set, Union, get_args
 
-from extended_dataset_profile.models.v0.edp import (
-    ArchiveDataSet,
-    AssetGrowthRate,
-    AssetImmutability,
-    AssetProcessingStatus,
-    AssetReference,
-    AssetTransferType,
-    AssetUpdatePeriod,
-    AudioDataSet,
-    Augmentation,
-    DatasetTreeNode,
-    DataSetType,
-    DocumentDataSet,
-    ExtendedDatasetProfile,
-    ImageDataSet,
-    SemiStructuredDataSet,
-    StructuredDataSet,
-    TemporalCover,
-    UnstructuredTextDataSet,
-    VideoDataSet,
-)
+import extended_dataset_profile
 from extended_dataset_profile.version import Version
 from pydantic import AnyUrl, BaseModel, Field, model_validator
 
 
 def _get_edp_field(name: str) -> Any:
     """Function to avoid mypy from complaining about putting FieldInfo's into fields."""
-    return ExtendedDatasetProfile.model_fields[name]
+    return extended_dataset_profile.ExtendedDatasetProfile.model_fields[name]
 
 
 class UserProvidedEdpData(BaseModel):
@@ -38,17 +18,19 @@ class UserProvidedEdpData(BaseModel):
     """
 
     name: str = _get_edp_field("name")
-    assetRefs: List[AssetReference] = _get_edp_field("assetRefs")
+    assetRefs: List[extended_dataset_profile.AssetReference] = _get_edp_field("assetRefs")
     dataCategory: str | None = _get_edp_field("dataCategory")
-    assetProcessingStatus: AssetProcessingStatus | None = _get_edp_field("assetProcessingStatus")
+    assetProcessingStatus: extended_dataset_profile.AssetProcessingStatus | None = _get_edp_field(
+        "assetProcessingStatus"
+    )
     description: str | None = _get_edp_field("description")
     tags: List[str] = _get_edp_field("tags")
     dataSubCategory: str | None = _get_edp_field("dataSubCategory")
     assetTypeInfo: str | None = _get_edp_field("assetTypeInfo")
-    transferTypeFlag: AssetTransferType | None = _get_edp_field("transferTypeFlag")
-    transferTypeFrequency: AssetUpdatePeriod | None = _get_edp_field("transferTypeFrequency")
-    growthFlag: AssetGrowthRate | None = _get_edp_field("growthFlag")
-    immutabilityFlag: AssetImmutability | None = _get_edp_field("immutabilityFlag")
+    transferTypeFlag: extended_dataset_profile.AssetTransferType | None = _get_edp_field("transferTypeFlag")
+    transferTypeFrequency: extended_dataset_profile.AssetUpdatePeriod | None = _get_edp_field("transferTypeFrequency")
+    growthFlag: extended_dataset_profile.AssetGrowthRate | None = _get_edp_field("growthFlag")
+    immutabilityFlag: extended_dataset_profile.AssetImmutability | None = _get_edp_field("immutabilityFlag")
     allowedForAiTraining: bool | None = _get_edp_field("allowedForAiTraining")
     nda: str | None = _get_edp_field("nda")
     dpa: str | None = _get_edp_field("dpa")
@@ -64,21 +46,25 @@ class ComputedEdpData(BaseModel):
     """All fields of the extended dataset profile that get calculated by this service."""
 
     generatedBy: str = _get_edp_field("generatedBy")
-    dataTypes: Set[DataSetType] = _get_edp_field("dataTypes")
+    dataTypes: Set[extended_dataset_profile.DataSetType] = _get_edp_field("dataTypes")
     assetSha256Hash: str = _get_edp_field("assetSha256Hash")
-    archiveDatasets: List[ArchiveDataSet] = _get_edp_field("archiveDatasets")
-    structuredDatasets: List[StructuredDataSet] = _get_edp_field("structuredDatasets")
-    semiStructuredDatasets: List[SemiStructuredDataSet] = _get_edp_field("semiStructuredDatasets")
-    unstructuredTextDatasets: List[UnstructuredTextDataSet] = _get_edp_field("unstructuredTextDatasets")
-    imageDatasets: List[ImageDataSet] = _get_edp_field("imageDatasets")
+    archiveDatasets: List[extended_dataset_profile.ArchiveDataSet] = _get_edp_field("archiveDatasets")
+    structuredDatasets: List[extended_dataset_profile.StructuredDataSet] = _get_edp_field("structuredDatasets")
+    semiStructuredDatasets: List[extended_dataset_profile.SemiStructuredDataSet] = _get_edp_field(
+        "semiStructuredDatasets"
+    )
+    unstructuredTextDatasets: List[extended_dataset_profile.UnstructuredTextDataSet] = _get_edp_field(
+        "unstructuredTextDatasets"
+    )
+    imageDatasets: List[extended_dataset_profile.ImageDataSet] = _get_edp_field("imageDatasets")
     schemaVersion: Version = _get_edp_field("schemaVersion")
     volume: int = _get_edp_field("volume")
-    videoDatasets: List[VideoDataSet] = _get_edp_field("videoDatasets")
-    audioDatasets: List[AudioDataSet] = _get_edp_field("audioDatasets")
-    temporalCover: TemporalCover | None = _get_edp_field("temporalCover")
+    videoDatasets: List[extended_dataset_profile.VideoDataSet] = _get_edp_field("videoDatasets")
+    audioDatasets: List[extended_dataset_profile.AudioDataSet] = _get_edp_field("audioDatasets")
+    temporalCover: extended_dataset_profile.TemporalCover | None = _get_edp_field("temporalCover")
     periodicity: str | None = _get_edp_field("periodicity")
-    documentDatasets: List[DocumentDataSet] = _get_edp_field("documentDatasets")
-    datasetTree: List[DatasetTreeNode] = _get_edp_field("datasetTree")
+    documentDatasets: List[extended_dataset_profile.DocumentDataSet] = _get_edp_field("documentDatasets")
+    datasetTree: List[extended_dataset_profile.DatasetTreeNode] = _get_edp_field("datasetTree")
 
 
 class AugmentedColumn(BaseModel):
@@ -92,7 +78,7 @@ class AugmentedColumn(BaseModel):
         default=None,
         description="Name of the dataset this column was added to. If datasetName is None, EDPS will assume that the augmented column contained in all structured datasets.",
     )
-    augmentation: Augmentation = Field(description="Augmentation information")
+    augmentation: extended_dataset_profile.Augmentation = Field(description="Augmentation information")
 
 
 class DistributionConfig(BaseModel):
@@ -200,14 +186,14 @@ def recursively_escape_strings(data: Any) -> Any:
 
 
 DataSet = Union[
-    ArchiveDataSet,
-    StructuredDataSet,
-    SemiStructuredDataSet,
-    UnstructuredTextDataSet,
-    ImageDataSet,
-    VideoDataSet,
-    AudioDataSet,
-    DocumentDataSet,
+    extended_dataset_profile.ArchiveDataSet,
+    extended_dataset_profile.StructuredDataSet,
+    extended_dataset_profile.SemiStructuredDataSet,
+    extended_dataset_profile.UnstructuredTextDataSet,
+    extended_dataset_profile.ImageDataSet,
+    extended_dataset_profile.VideoDataSet,
+    extended_dataset_profile.AudioDataSet,
+    extended_dataset_profile.DocumentDataSet,
 ]
 
 

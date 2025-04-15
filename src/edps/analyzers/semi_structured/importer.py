@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from clevercsv.encoding import get_encoding
-from extended_dataset_profile.models.v0.edp import SemiStructuredDataSet
+from extended_dataset_profile import SemiStructuredDataSet
 
 from edps.analyzers.semi_structured import JsonAnalyzer
 from edps.taskcontext import TaskContext

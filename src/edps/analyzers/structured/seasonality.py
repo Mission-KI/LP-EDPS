@@ -5,7 +5,7 @@ from typing import AsyncGenerator, Optional, Tuple
 from warnings import warn
 
 import numpy as np
-from extended_dataset_profile.models.v0.edp import TimeBasedGraph, Trend
+from extended_dataset_profile import TimeBasedGraph, Trend
 from matplotlib.figure import Figure
 from pandas import DataFrame, Series
 from scipy.stats import linregress

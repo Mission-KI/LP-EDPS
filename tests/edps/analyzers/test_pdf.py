@@ -1,6 +1,6 @@
 from typing import Dict
 
-from extended_dataset_profile.models.v0.edp import ModificationState
+from extended_dataset_profile import ModificationState
 from pypdf import DocumentInformation
 from pypdf.generic import ArrayObject, TextStringObject
 

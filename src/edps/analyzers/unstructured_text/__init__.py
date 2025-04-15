@@ -9,7 +9,7 @@ from warnings import warn
 from clevercsv.cparser_util import parse_string
 from clevercsv.dialect import SimpleDialect
 from clevercsv.exceptions import Error as CleverCsvError
-from extended_dataset_profile.models.v0.edp import EmbeddedTable, StructuredDataSet, UnstructuredTextDataSet
+from extended_dataset_profile import EmbeddedTable, StructuredDataSet, UnstructuredTextDataSet
 from pandas import DataFrame
 
 from edps.analyzers.structured.importer import dialect_to_str, get_possible_csv_dialects, pandas_importer

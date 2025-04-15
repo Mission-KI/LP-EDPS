@@ -3,7 +3,7 @@ import warnings
 from pathlib import Path
 from typing import Iterator, Optional
 
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     DocumentDataSet,
     ModificationState,
 )

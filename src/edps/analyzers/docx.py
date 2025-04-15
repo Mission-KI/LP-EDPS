@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 from docx import Document as read_document
 from docx.document import Document
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     DocumentDataSet,
     ImageDataSet,
     ModificationState,

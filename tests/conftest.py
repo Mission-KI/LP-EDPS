@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from logging import getLogger
 from pathlib import Path
 
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     AssetReference,
     DataSpace,
     License,

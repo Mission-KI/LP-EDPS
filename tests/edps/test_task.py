@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from extended_dataset_profile.models.v0.edp import Resolution, VideoDataSet, VideoPixelFormat
+from extended_dataset_profile import Resolution, VideoDataSet, VideoPixelFormat
 
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl

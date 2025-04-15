@@ -1,4 +1,4 @@
-from extended_dataset_profile.models.v0.edp import StructuredDataSet, UnstructuredTextDataSet, WordFrequency
+from extended_dataset_profile import StructuredDataSet, UnstructuredTextDataSet, WordFrequency
 from pytest import mark, raises
 
 from edps.analyzers.unstructured_text.chunk import Chunk

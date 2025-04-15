@@ -1,7 +1,7 @@
 import json
 from typing import Any, AsyncIterator, Dict, Iterable, List, Optional, Tuple, Union
 
-from extended_dataset_profile.models.v0.edp import SemiStructuredDataSet
+from extended_dataset_profile import SemiStructuredDataSet
 from genson import SchemaBuilder
 from pandas import DataFrame, json_normalize
 

@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from io import BufferedIOBase
 from pathlib import Path
 
+from extended_dataset_profile import ExtendedDatasetProfile
 from pydantic.dataclasses import dataclass
 
-from edps import ExtendedDatasetProfile
-from edps.taskcontext import TaskContext
+from ..taskcontext import TaskContext
 
 
 @dataclass

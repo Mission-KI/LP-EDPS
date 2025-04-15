@@ -4,9 +4,7 @@ from collections import Counter
 from typing import Iterator, List, Optional, Set, Union, cast
 
 import spacy
-import spacy.cli
-import spacy.cli.download
-from extended_dataset_profile.models.v0.edp import WordFrequency
+from extended_dataset_profile import WordFrequency
 from lingua import Language, LanguageDetector, LanguageDetectorBuilder
 from pandas import DataFrame, RangeIndex, Series
 from spacy.tokens import Token

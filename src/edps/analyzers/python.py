@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from pickle import load
 
-from extended_dataset_profile.models.v0.edp import StructuredDataSet
+from extended_dataset_profile import StructuredDataSet
 from pandas import DataFrame
 
 from edps.analyzers.structured import PandasAnalyzer

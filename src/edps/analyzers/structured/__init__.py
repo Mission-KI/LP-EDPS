@@ -7,7 +7,7 @@ from typing import Dict, Optional, Tuple, cast
 from warnings import warn
 
 import pandas as pd
-from extended_dataset_profile.models.v0.edp import (
+from extended_dataset_profile import (
     CorrelationSummary,
     DateTimeColumn,
     FileReference,

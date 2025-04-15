@@ -10,10 +10,10 @@ import matplotlib.colors
 import matplotlib.pyplot
 import matplotlib.style
 import seaborn
-from extended_dataset_profile.models.v0.edp import ExtendedDatasetProfile
+from extended_dataset_profile import ExtendedDatasetProfile
 
-from edps.file import build_real_sub_path, sanitize_path
-from edps.taskcontext import TaskContext
+from .file import build_real_sub_path, sanitize_path
+from .taskcontext import TaskContext
 
 TEXT_ENCODING = "utf-8"
 

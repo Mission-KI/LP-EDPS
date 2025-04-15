@@ -5,7 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Tuple
 
-from extended_dataset_profile.models.v0.edp import AssetReference, DataSpace, License, Publisher
+from extended_dataset_profile import AssetReference, DataSpace, License, Publisher
 from pydantic import HttpUrl, ValidationError
 
 from edps import analyse_asset

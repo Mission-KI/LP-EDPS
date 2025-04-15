@@ -1,7 +1,7 @@
 from pathlib import Path, PurePosixPath
 
 import pytest
-from extended_dataset_profile.models.v0.edp import CorrelationSummary
+from extended_dataset_profile import CorrelationSummary
 from pandas import DataFrame
 
 from edps.analyzers.structured import (

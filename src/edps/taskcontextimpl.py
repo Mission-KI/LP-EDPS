@@ -4,7 +4,7 @@ from logging import Logger
 from pathlib import Path, PurePosixPath
 from typing import Awaitable, Callable, Concatenate, Iterator, Optional, Unpack, cast
 
-from extended_dataset_profile.models.v0.edp import FileProperties
+from extended_dataset_profile import FileProperties
 
 from edps.file import determine_file_type, sanitize_path
 from edps.importers import lookup_importer, lookup_unsupported_type_message

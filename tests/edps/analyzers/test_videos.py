@@ -1,4 +1,4 @@
-from extended_dataset_profile.models.v0.edp import Resolution, VideoDataSet, VideoPixelFormat
+from extended_dataset_profile import Resolution, VideoDataSet, VideoPixelFormat
 
 from edps.importers import lookup_importer
 from tests.conftest import copy_asset_to_ctx_input_dir

@@ -6,10 +6,10 @@ from typing import Any
 from xhtml2pdf import pisa
 from xhtml2pdf.context import pisaContext as PisaContext
 
-from edps.file import build_real_sub_path
-from edps.report.base import ReportGenerator, ReportInput
-from edps.report.html import HtmlReportGenerator
-from edps.taskcontext import TaskContext
+from ..file import build_real_sub_path
+from ..report.base import ReportGenerator, ReportInput
+from ..report.html import HtmlReportGenerator
+from ..taskcontext import TaskContext
 
 
 class PdfReportGenerator(ReportGenerator):
