@@ -335,6 +335,9 @@ def parse_types(ctx: TaskContext, data: DataFrame) -> Result:
     column_infos = dict[str, ColumnInfo]()
     results_data = DataFrame(index=data.index, columns=data.columns)
 
+    if len(data.columns) != len(set([col for col in data.columns if col])):
+        raise RuntimeError(f"The dataframe has empty or duplicate columns: {data.columns}")
+
     for column_name, column in data.items():
         if not isinstance(column_name, str):
             raise RuntimeError(f"Column {column_name} needs a label.")

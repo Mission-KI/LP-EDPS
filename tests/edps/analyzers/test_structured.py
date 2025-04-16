@@ -10,7 +10,12 @@ from edps.analyzers.structured import (
     _get_correlation_matrix,
     _get_correlation_summary,
 )
-from edps.analyzers.structured.importer import HeaderMismatchWarning, csv_import_dataframe, excel_import_dataframes
+from edps.analyzers.structured.importer import (
+    HeaderMismatchWarning,
+    csv_import_dataframe,
+    excel_import_dataframes,
+    pandas_importer,
+)
 
 
 async def test_correlation(ctx):
@@ -182,4 +187,24 @@ async def test_hamburg(path_data_hamburg_csv, ctx):
         "col010",
         "col011",
         "col012",
+    ]
+
+
+async def test_analyse_dataframe(ctx):
+    cells = [
+        ["- ", "", "MAJOR", "", " breaking changes  "],
+        ["- ", "", "MINOR", "", "   new features   "],
+        ["- ", "", "PATCH", "", "bug fixes"],
+    ]
+    df = DataFrame(columns=cells[0], data=cells[1:])
+    dataset = await pandas_importer(ctx, df)
+    headers = [col.name for col in dataset.all_columns]
+    assert dataset.columnCount == 5
+    assert dataset.rowCount == 2
+    assert headers == [
+        "-",
+        "col001",
+        "MAJOR",
+        "col003",
+        "breaking changes",
     ]
