@@ -86,6 +86,7 @@ test = [
     "pre-commit>=4.0.1",
     "pip-licenses>=5.0.0",
     "pydantic-markdown @ git+https://github.com/Beebucket/pydantic_markdown@2.0.1",
+    "pytest-cov>=6.1.1",
 ]
 dev = ["edps[test]"]
 
