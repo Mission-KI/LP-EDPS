@@ -166,6 +166,9 @@ ignore-packages = [
 ]
 partial-match = true
 
+[tool.coverage.run]
+relative_files = true
+
 [tool.uv.sources]
 torch = [
     { index = "pypi", marker = "sys_platform == 'win32'" },

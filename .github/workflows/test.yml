@@ -8,4 +8,4 @@ jobs:
         steps:
             - uses: beebucket/lint-and-test-action@v1
               with:
-                token: ${{ secrets.GIT_HUB_API_KEY }}
+                install-token: ${{ secrets.GIT_HUB_API_KEY }}
