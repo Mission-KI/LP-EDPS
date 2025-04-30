@@ -281,4 +281,4 @@ def download_artifacts():
     Downloads all artifacts needed for the service execution.
     """
     static_ffmpeg.add_paths(weak=True)
-    easyocr.Reader(["en", "de"], gpu=False, download_enabled=True)
+    easyocr.Reader(["en", "de"], gpu=False, download_enabled=True, verbose=False)
