@@ -1,3 +1,4 @@
+import warnings
 from typing import List
 
 import easyocr
@@ -33,7 +34,16 @@ class OCR:
         :param img: The image to process.
         :return: A pandas DataFrame containing the OCR results.
         """
-        raw_results = self._reader.readtext(img)
+        with warnings.catch_warnings(record=False):
+            # EasyOCR always tells pytorch to pin memory, even if there is no accelerator
+            # device selected. If there is no accelerator device, this will lead to a warning
+            # from pytorch.
+            warnings.filterwarnings(
+                action="ignore",
+                category=UserWarning,
+                message="'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.",
+            )
+            raw_results = self._reader.readtext(img)
         if not raw_results:
             return DataFrame(columns=["detected text", "confidence"])
 
