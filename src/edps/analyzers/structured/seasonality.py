@@ -12,6 +12,9 @@ from scipy.stats import linregress
 from statsmodels.tsa.seasonal import STL, DecomposeResult
 
 from edps.analyzers.structured.result_keys import (
+    DATETIME_EARLIEST,
+    DATETIME_LATEST,
+    DATETIME_TEMPORAL_CONSISTENCY,
     NUMERIC_GRAPH_ORIGINAL,
     NUMERIC_GRAPH_RESIDUAL,
     NUMERIC_GRAPH_SEASONALITY,
@@ -65,11 +68,23 @@ async def _seasonal_decompose_numeric_over_datetime(
     ctx.logger.info("Starting seasonality analysis on %d rows over %d time bases", row_count, datetime_count)
 
     dataframe = DataFrame(index=numeric_columns.columns, columns=datetime_column_infos.ids, dtype=object)
+    dataframe[:] = None
 
     for datetime_column_name, datetime_fields in datetime_column_fields.T.items():
-        temporal_consistency: DatetimeColumnTemporalConsistency = datetime_fields["temporal-consistency"]
-        datetime_column_duration: timedelta = datetime_fields["latest"] - datetime_fields["earliest"]
+        temporal_consistency: Optional[DatetimeColumnTemporalConsistency] = datetime_fields[
+            DATETIME_TEMPORAL_CONSISTENCY
+        ]
+        datetime_column_duration: timedelta = datetime_fields[DATETIME_LATEST] - datetime_fields[DATETIME_EARLIEST]
         datetime_kind = datetime_column_infos.get_info(str(datetime_column_name)).kind
+
+        if temporal_consistency is None:
+            message = (
+                f'There is no temporal consistency information for column "{datetime_column_name}". '
+                "It will be skipped for seasonality analysis."
+            )
+            warn(message)
+            ctx.logger.warning(message)
+            continue
 
         if datetime_kind == DatetimeKind.DATE:
             message = (
@@ -80,15 +95,14 @@ async def _seasonal_decompose_numeric_over_datetime(
             ctx.logger.warning(message)
         elif datetime_kind == DatetimeKind.TIME:
             message = (
-                f'Column "{datetime_column_name}" has time only format. It will be skipped for seasonality analysis'
+                f'Column "{datetime_column_name}" has time only format. It will be skipped for seasonality analysis.'
             )
             warn(message)
             ctx.logger.warning(message)
             continue
 
-        filtered_numeric_columns = numeric_columns.loc[temporal_consistency.cleaned_series.index].set_index(
-            temporal_consistency.cleaned_series, inplace=False
-        )
+        cleaned_series = temporal_consistency.cleaned_series
+        filtered_numeric_columns = numeric_columns.loc[cleaned_series.index].set_index(cleaned_series, inplace=False)
 
         for numeric_column_name, numeric_column in filtered_numeric_columns.items():
             resample_period = _get_biggest_fitting_period(
@@ -261,6 +275,7 @@ async def _iterate_trend(
         trends = [
             await calculate_trend(config, decompose_result.trend, numeric_columns_iqr[numeric_column_name])
             for decompose_result in decompose_results_for_column
+            if decompose_result is not None
         ]
         if len(trends) == 0 or all(trend == Trend.NoTrend for trend in trends):
             yield numeric_column_name, Trend.NoTrend

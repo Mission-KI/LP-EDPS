@@ -81,10 +81,21 @@ pip install <URL>
 To create a release, just push a tag to the repository. The pipeline will then run checks
 and create a draft for a release. You can then review it and decide to publish or dump it.
 
-## Creating you own service
+## Creating Your Own Service/Algorithm
 
-You can create your own service by forking this repository.
-Strip the components you do not need. Then start adding in your own functionality.
+The EDPS platform offers two flexible approaches for integrating your own custom algorithms or ontology mappers:
+
+### 1. Fork and Extend the EDPS Repository
+
+You can fork this repository to build upon the existing algorithms or to introduce support for new asset types. This method allows you to directly enhance and tailor the service to your specific needs.
+
+If your implementation could be valuable to others, we warmly encourage you to submit a **Pull Request**. Contributing back to the main EDPS repository helps strengthen the platform for the entire community.
+
+### 2. Develop a Custom Ontology Mapper
+
+Alternatively, you can create a standalone ontology mapper by leveraging the libraries and tools provided by EDPS. This approach is ideal for those who prefer to maintain separate services while still benefiting from the EDPS ecosystem.
+
+For a practical example, please refer to the following example [repository](https://github.com/Mission-KI/LP-MDS-Ontology-Mapper).
 
 ## Scripts
 

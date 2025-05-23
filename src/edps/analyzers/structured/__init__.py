@@ -1,4 +1,5 @@
 import itertools
+from collections import Counter
 from collections.abc import Hashable
 from datetime import timedelta
 from enum import Enum
@@ -110,6 +111,7 @@ class PandasAnalyzer:
             row_count,
         )
 
+        self._normalize_headers()
         type_parser_results = parse_types(ctx, self._data)
 
         all_cols = type_parser_results.all_cols
@@ -377,6 +379,14 @@ class PandasAnalyzer:
             numberUnique=computed_fields[COMMON_UNIQUE],
             distributionGraph=await _get_string_distribution_graph(ctx, column),
         )
+
+    def _normalize_headers(self):
+        """Strip spaces and replace empty or duplicate entries with generic headers."""
+        cols = list(self._data.columns)
+        cols = [col.strip() for col in cols]
+        col_counts = Counter(cols)
+        cols = [col if col and col_counts[col] == 1 else f"col{i:03d}" for i, col in enumerate(cols)]
+        self._data.columns = Index(cols)
 
 
 async def _generate_box_plot(ctx: TaskContext, column: Series) -> FileReference:

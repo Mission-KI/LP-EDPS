@@ -69,7 +69,8 @@ class TaskContextImpl(TaskContext):
         return PurePosixPath("/".join(self._name_parts))
 
     def build_output_reference(self, final_part: str) -> PurePosixPath:
-        ref = "/".join(self._name_parts) + "/" + final_part
+        parent_ref = "/".join(self._name_parts)
+        ref = parent_ref + "/" + final_part if parent_ref else final_part
         ref = ref.replace(".", "_")
         return PurePosixPath(ref)
 

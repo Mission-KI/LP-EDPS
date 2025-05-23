@@ -15,24 +15,14 @@ jobs:
     build_wheel:
         runs-on: ubuntu-24.04
         name: Build Release Wheel
-        env:
-            DISTRIBUTION_DIR: "${{ github.workspace }}/dist"
-            VERSION: "${{ github.ref_name }}"
+        outputs:
+            wheel-artifact: ${{ steps.build.outputs.wheel-artifact-name }}
         steps:
         -   uses: actions/checkout@v4
             with:
                 lfs: true
-        -   uses: actions/setup-python@v5
-            with:
-                python-version-file: '.python-version'
-                cache: 'pip'
-        -   name: Build Wheel
-            run: /bin/bash ${{ github.workspace}}/scripts/build_wheel.sh
-        -   uses: actions/upload-artifact@v4
-            with:
-                name: ${{ env.WHEEL_NAME }}
-                path: "${{ env.DISTRIBUTION_DIR }}/edps*.whl"
-                if-no-files-found: error
+        -   id: build
+            uses: beebucket/build-wheel-action@v1
 
     generate_schemas:
         runs-on: ubuntu-24.04
@@ -48,7 +38,7 @@ jobs:
         -   uses: actions/download-artifact@v4
             id: download_wheel
             with:
-                name: ${{ env.WHEEL_NAME }}
+                name: ${{ needs.build_wheel.outputs.wheel-artifact }}
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
@@ -74,7 +64,7 @@ jobs:
         -   uses: actions/download-artifact@v4
             id: download_wheel
             with:
-                name: ${{ env.WHEEL_NAME }}
+                name: ${{ needs.build_wheel.outputs.wheel-artifact }}
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
@@ -101,7 +91,7 @@ jobs:
         -   uses: actions/download-artifact@v4
             id: download_wheel
             with:
-                name: ${{ env.WHEEL_NAME }}
+                name: ${{ needs.build_wheel.outputs.wheel-artifact }}
                 path: ${{ github.workspace }}
         -   name: Install
             run: |
@@ -123,26 +113,14 @@ jobs:
         -   license_report
         -   configuration-readme
         env:
-            ARTIFACTS_DIR: ${{ github.workspace }}/release_artifacts
+            ARTIFACTS_DIR: "${{ github.workspace }}/release_artifacts"
         steps:
         -   name: Create Directory for artifacts
             run: mkdir -p ${{ env.ARTIFACTS_DIR }}
         -   uses: actions/download-artifact@v4
             with:
-                name: ${{ env.WHEEL_NAME }}
-                path: ${{ env.ARTIFACTS_DIR }}
-        -   uses: actions/download-artifact@v4
-            with:
-                name: ${{ env.OPENAPI_SCHEMA }}
-                path: ${{ env.ARTIFACTS_DIR }}
-        -   uses: actions/download-artifact@v4
-            with:
-                name: ${{ env.LICENSES_ARTIFACT_NAME }}
-                path: ${{ env.ARTIFACTS_DIR }}
-        -   uses: actions/download-artifact@v4
-            with:
-                name: ${{ env.CONFIG_README_ARTIFACT_NAME }}
-                path: ${{ env.ARTIFACTS_DIR }}        
+                pattern: "!*.dockerbuild"
+                path: "${{ env.ARTIFACTS_DIR }}"
         -   name: Release
             uses: softprops/action-gh-release@v2
             with:

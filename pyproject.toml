@@ -59,6 +59,7 @@ dependencies = [
     "spacy ~= 3.8",
     "Jinja2",
     "xhtml2pdf",
+    "libsvm-official<=3.35.0",
     "clevercsv @ git+https://github.com/Beebucket/CleverCSV@0.8.3",
     "de-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.8.0/de_core_news_lg-3.8.0-py3-none-any.whl",
     "en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl",
@@ -86,6 +87,7 @@ test = [
     "pre-commit>=4.0.1",
     "pip-licenses>=5.0.0",
     "pydantic-markdown @ git+https://github.com/Beebucket/pydantic_markdown@2.0.1",
+    "pytest-cov>=6.1.1",
 ]
 dev = ["edps[test]"]
 
@@ -164,6 +166,9 @@ ignore-packages = [
     "easyocr",
 ]
 partial-match = true
+
+[tool.coverage.run]
+relative_files = true
 
 [tool.uv.sources]
 torch = [

@@ -173,6 +173,8 @@ def _get_overall_temporal_consistency(edp: ComputedEdpData) -> Optional[str]:
 def _iterate_all_temporal_consistencies(edp: ComputedEdpData) -> Iterator[DataFrame]:
     for dataset in edp.structuredDatasets:
         for row in dataset.datetimeColumns:
+            if len(row.temporalConsistencies) == 0:
+                continue
             dataframe = DataFrame(
                 index=[item.timeScale for item in row.temporalConsistencies],
             )
@@ -279,4 +281,4 @@ def download_artifacts():
     Downloads all artifacts needed for the service execution.
     """
     static_ffmpeg.add_paths(weak=True)
-    easyocr.Reader(["en", "de"], gpu=False, download_enabled=True)
+    easyocr.Reader(["en", "de"], gpu=False, download_enabled=True, verbose=False)

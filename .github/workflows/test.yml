@@ -1,9 +1,6 @@
-name: Tests and Linters
+name: Lint and Test
 
 on: [pull_request]
-
-env:
-    PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
 
 jobs:
     linter:
