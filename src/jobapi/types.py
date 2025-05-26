@@ -1,7 +1,7 @@
 from enum import Enum
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from edps.types import Config, UserProvidedEdpData
 
@@ -47,3 +47,14 @@ class JobView(BaseModel):
         default=JobState.WAITING_FOR_DATA,
     )
     state_detail: str | None = Field(description="State details", default=None)
+
+
+class MdsJobView(JobView):
+    """
+    JobView with an additional MDS specific field.
+    This only gets used, when we are invoked by MDS and they supply the x-service-base-url header in the create job call.
+    """
+
+    upload_url: AnyHttpUrl = Field(
+        description="Optional upload link. Only set by MDS when the create job call got the x-service-base-url header."
+    )

@@ -1,23 +1,29 @@
 from enum import Enum
 from tempfile import TemporaryFile
+from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Header,
     Request,
     Response,
     UploadFile,
 )
 from fastapi.responses import FileResponse, PlainTextResponse
+from pydantic import AnyHttpUrl
 
 from jobapi.config import AppConfig
 from jobapi.manager import AnalysisJobManager
-from jobapi.types import JobData, JobView
+from jobapi.types import JobData, JobView, MdsJobView
 
 
 class Tags(str, Enum):
     AnalysisJob = "Analysis job for dataspace"
+
+
+MdsHeader = Annotated[Optional[str], Header()]
 
 
 def get_job_api_router(app_config: AppConfig):
@@ -25,7 +31,7 @@ def get_job_api_router(app_config: AppConfig):
     router = APIRouter()
 
     @router.post("/analysisjob", tags=[Tags.AnalysisJob], summary="Create analysis job")
-    async def create_analysis_job(job_data: JobData) -> JobView:
+    async def create_analysis_job(job_data: JobData, x_service_base_url: MdsHeader = None) -> JobView | MdsJobView:
         """Create an analysis job based on the user provided EDP data.
         This must be followed by uploading the actual data.
 
@@ -33,7 +39,13 @@ def get_job_api_router(app_config: AppConfig):
         """
 
         job_id = await job_manager.create_job(job_data)
-        return await job_manager.get_job_view(job_id)
+        job_view = await job_manager.get_job_view(job_id)
+        if x_service_base_url is None:
+            return job_view
+        else:
+            # This means we got called by MDS and must supply the upload link back to them.
+            upload_url = AnyHttpUrl(f"{x_service_base_url}/api/{job_view.job_id}")
+            return MdsJobView(**job_view.model_dump(), upload_url=upload_url)
 
     @router.post(
         "/analysisjob/{job_id}/cancel",
