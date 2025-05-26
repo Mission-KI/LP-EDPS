@@ -44,7 +44,8 @@ def setup_matplotlib():
     seaborn.reset_orig()
     matplotlib.style.use(str(MATPLOTLIB_STYLE_PATH))
     colormap = _get_default_colormap()
-    matplotlib.colormaps.register(colormap)
+    if colormap.name not in matplotlib.colormaps:
+        matplotlib.colormaps.register(colormap)
     matplotlib.pyplot.set_cmap(colormap)
 
 
