@@ -10,9 +10,10 @@ The Extended Dataset Profile Service is shipped as a docker image. The path
 of the docker image is always annotated on the release notes.
 You can also [create the docker image locally by yourself](#scripts).
 
-The extended data set profile service currently contains two entry points:
+The extended data set profile service currently contains three entry points:
 - [Job REST API](#job-api): Gets started once. Exposes a REST API and manages queue of jobs.
 - [Pontus-X CLI](#pontus-x-cli): Gets invoked once per asset by Pontus-X. For more details check this article on [compute to data.](https://docs.pontus-x.eu/docs/use-cases/compute)
+- [Python API](#python-api)
 
 # Developer Info
 
@@ -112,3 +113,27 @@ See [Job API README](src/jobapi/README.md).
 # Pontus-X CLI
 
 See [Pontus-X CLI README](src/pontusx/README.md).
+
+# Python API
+
+To use the python API, first install the extended dataset service as a python library:
+
+```bash
+# With UV
+uv add git+https://github.com/Beebucket/extended_dataset_profile_service.git
+# or with PIP
+pip install git+https://github.com/Beebucket/extended_dataset_profile_service.git
+```
+
+Then you can use it by calling its main interface function:
+
+```python
+from pathlib import Path
+
+import edps
+
+async def my_function(input_file: Path, zip_output: Path | IO[bytes], user_data: edps.UserProvidedEdpData):
+    ...
+    await edps.analyse_asset(input_file, zip_output, user_data)
+    ...
+```
