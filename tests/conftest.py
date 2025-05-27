@@ -13,19 +13,12 @@ from pydantic import HttpUrl
 from pytest import fixture
 
 from edps.analyzers.structured.importer import csv_import_dataframe
-from edps.filewriter import setup_matplotlib
-from edps.service import analyse_asset, download_artifacts
+from edps.service import analyse_asset
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
 from edps.types import Config, UserProvidedEdpData
 
 TESTS_ROOT_PATH = Path(__file__).parent.absolute()
-
-
-@fixture(autouse=True, scope="session")
-def setup():
-    setup_matplotlib()
-    download_artifacts()
 
 
 @fixture

@@ -17,9 +17,10 @@ from .taskcontext import TaskContext
 
 TEXT_ENCODING = "utf-8"
 
-MATPLOTLIB_BACKEND: str = "AGG"
+MATPLOTLIB_BACKEND = "AGG"
 MATPLOTLIB_PLOT_FORMAT = ".png"
 MATPLOTLIB_STYLE_PATH = Path(__file__).parent / "styles/plot.mplstyle"
+MATPLOTLIB_COLOR_MAP_NAME = "daseen"
 
 
 async def write_edp(ctx: TaskContext, name: PurePosixPath, edp: ExtendedDatasetProfile):
@@ -36,25 +37,6 @@ async def write_edp(ctx: TaskContext, name: PurePosixPath, edp: ExtendedDatasetP
     ctx.logger.debug('Generated EDP file "%s"', relative_save_path)
 
 
-def setup_matplotlib():
-    """Customize matplotlib for our plots. Must be called exactly once before using `get_pyplot_writer()`."""
-
-    matplotlib.use(MATPLOTLIB_BACKEND)
-    seaborn.reset_orig()
-    matplotlib.style.use(str(MATPLOTLIB_STYLE_PATH))
-    colormap = _get_default_colormap()
-    if colormap.name not in matplotlib.colormaps:
-        matplotlib.colormaps.register(colormap)
-    matplotlib.pyplot.set_cmap(colormap)
-
-
-def _get_default_colormap() -> matplotlib.colors.Colormap:
-    BLUE = "#43ACFF"
-    GRAY = "#D9D9D9"
-    PINK = "#FF3FFF"
-    return matplotlib.colors.LinearSegmentedColormap.from_list("daseen", [BLUE, GRAY, PINK])
-
-
 @asynccontextmanager
 async def get_pyplot_writer(
     ctx: TaskContext, name: PurePosixPath, **fig_kw
@@ -66,6 +48,7 @@ async def get_pyplot_writer(
     This is saved to an image when the context is exited.
     Before using this function `setup_matplotlib()` must be called exactly once."""
 
+    _setup_matplotlib_if_needed()
     save_path = _prepare_save_path(ctx, name.with_suffix(MATPLOTLIB_PLOT_FORMAT))
     relative_save_path = save_path.relative_to(ctx.output_path)
     figure, axes = matplotlib.pyplot.subplots(**fig_kw)
@@ -75,6 +58,27 @@ async def get_pyplot_writer(
     figure.savefig(save_path)
     matplotlib.pyplot.close(figure)
     ctx.logger.debug('Generated plot "%s"', relative_save_path)
+
+
+def _setup_matplotlib_if_needed():
+    """Customize matplotlib for our plots.
+
+    Gets called by get_pyplot_writer() to customize the plots with the beebucket style.
+    """
+    matplotlib.use(MATPLOTLIB_BACKEND)
+    seaborn.reset_orig()
+    matplotlib.style.use(str(MATPLOTLIB_STYLE_PATH))
+    if matplotlib.colormaps.get(MATPLOTLIB_COLOR_MAP_NAME) is None:
+        colormap = _get_default_colormap()
+        matplotlib.colormaps.register(colormap)
+        matplotlib.pyplot.set_cmap(colormap)
+
+
+def _get_default_colormap() -> matplotlib.colors.Colormap:
+    BLUE = "#43ACFF"
+    GRAY = "#D9D9D9"
+    PINK = "#FF3FFF"
+    return matplotlib.colors.LinearSegmentedColormap.from_list(MATPLOTLIB_COLOR_MAP_NAME, [BLUE, GRAY, PINK])
 
 
 def _prepare_save_path(ctx: TaskContext, name: PurePosixPath):

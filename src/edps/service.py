@@ -297,6 +297,11 @@ def compute_sha256(file_path: Path) -> str:
 def download_artifacts():
     """
     Downloads all artifacts needed for the service execution.
+    Therefore the service will not have to do any downloads after this to
+    function. This is especially useful when running in isolated environments.
+
+    This is optional for most installations. The required artifacts will
+    be lazy loaded if this function was not called.
     """
     static_ffmpeg.add_paths(weak=True)
     easyocr.Reader(["en", "de"], gpu=False, download_enabled=True, verbose=False)

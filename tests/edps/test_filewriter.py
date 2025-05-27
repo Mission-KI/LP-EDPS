@@ -1,6 +1,6 @@
-from edps.filewriter import setup_matplotlib
+from edps.filewriter import _setup_matplotlib_if_needed
 
 
 def test_multi_call_setup_matplotlib():
-    setup_matplotlib()
-    setup_matplotlib()
+    _setup_matplotlib_if_needed()
+    _setup_matplotlib_if_needed()

@@ -2,7 +2,6 @@ import asyncio
 import logging
 from logging import getLogger
 
-from edps.filewriter import setup_matplotlib
 from pontusx.args import get_args
 from pontusx.service import run_service
 
@@ -17,7 +16,6 @@ async def amain():
     args = get_args()
     logger.debug("Pontus-X CLI got these arguments: %s", args)
     logger.info("Processing asset with DID='%s'", args.did)
-    setup_matplotlib()
     await run_service(logger, args)
     logger.info("Done")
 

@@ -1,20 +1,20 @@
 import warnings
 from pathlib import Path
 
-import ffmpeg
-
 from edps.analyzers.audio import analyse_audio
 from edps.analyzers.video import analyse_video
 from edps.taskcontext import TaskContext
 from edps.types import DataSet
 
+from .wrapped_ffmpeg import probe as ffmpeg_probe
+
 
 async def media_importer(ctx: TaskContext, path: Path) -> DataSet:
     ctx.logger.info("Analyzing media file '%s'", ctx.relative_path(path))
 
-    probe = ffmpeg.probe(path)
-    format_info = probe.get("format", {})
-    streams = probe.get("streams", [])
+    probe_result = ffmpeg_probe(path)
+    format_info = probe_result.get("format", {})
+    streams = probe_result.get("streams", [])
     video_streams = [s for s in streams if s.get("codec_type") == "video"]
     audio_streams = [s for s in streams if s.get("codec_type") == "audio"]
 
