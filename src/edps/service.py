@@ -37,8 +37,6 @@ from edps.report import PdfReportGenerator, ReportInput
 from edps.taskcontext import TaskContext
 from edps.types import AugmentedColumn, ComputedEdpData, DataSet, UserProvidedEdpData
 
-REPORT_FILENAME = "report.pdf"
-
 
 class UserInputError(RuntimeError):
     pass
@@ -186,7 +184,7 @@ def _iterate_all_temporal_consistencies(edp: ComputedEdpData) -> Iterator[DataFr
 async def _generate_report(ctx: TaskContext, edp: ExtendedDatasetProfile):
     try:
         input = ReportInput(edp=edp)
-        with get_report_path(ctx).open("wb") as file_io:
+        with ctx.report_file_path.open("wb") as file_io:
             await PdfReportGenerator().generate(ctx, input, ctx.output_path, file_io)
     except Exception as exception:
         ctx.logger.warning("Error generating the report, continuing anyways..", exc_info=exception)
@@ -270,10 +268,6 @@ def compute_sha256(file_path: Path) -> str:
         while chunk := file.read(8192):
             sha256.update(chunk)
     return sha256.hexdigest()
-
-
-def get_report_path(ctx: TaskContext) -> Path:
-    return ctx.output_path / REPORT_FILENAME
 
 
 def download_artifacts():

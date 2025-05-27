@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 from edps import analyse_asset, dump_service_info
 from edps.compression.zip import ZipAlgorithm
 from edps.file import build_real_sub_path, sanitize_path
-from edps.service import get_report_path
 from edps.taskcontextimpl import TaskContextImpl
 from jobapi.config import AppConfig
 from jobapi.exception import ApiClientException
@@ -277,8 +276,8 @@ class AnalysisJobProcessor:
             job_logger.info("Analysing asset '%s' version '%s'...", main_ref.assetId, main_ref.assetVersion)
             await analyse_asset(ctx, job.user_provided_edp_data)
             await ZipAlgorithm().compress(ctx.output_path, job.zip_archive)
-            if get_report_path(ctx).exists():
-                shutil.copy(get_report_path(ctx), job.report_file)
+            if ctx.report_file_path.exists():
+                shutil.copy(ctx.report_file_path, job.report_file)
 
     @staticmethod
     async def _cancellation_listener(job_id: UUID, job_repo: JobRepository):
