@@ -10,10 +10,11 @@ The Extended Dataset Profile Service is shipped as a docker image. The path
 of the docker image is always annotated on the release notes.
 You can also [create the docker image locally by yourself](#scripts).
 
-The extended data set profile service currently contains three entry points:
+The extended data set profile service currently contains four entry points:
 - [Job REST API](#job-api): Gets started once. Exposes a REST API and manages queue of jobs.
 - [Pontus-X CLI](#pontus-x-cli): Gets invoked once per asset by Pontus-X. For more details check this article on [compute to data.](https://docs.pontus-x.eu/docs/use-cases/compute)
 - [Python API](#python-api)
+- [Command Line Interface](#command-line-interface)
 
 # Developer Info
 
@@ -116,16 +117,7 @@ See [Pontus-X CLI README](src/pontusx/README.md).
 
 # Python API
 
-To use the python API, first install the extended dataset service as a python library:
-
-```bash
-# With UV
-uv add git+https://github.com/Beebucket/extended_dataset_profile_service.git
-# or with PIP
-pip install git+https://github.com/Beebucket/extended_dataset_profile_service.git
-```
-
-Then you can use it by calling its main interface function:
+You can use the EDPS from python by calling its main interface function:
 
 ```python
 from pathlib import Path
@@ -136,4 +128,15 @@ async def my_function(input_file: Path, zip_output: Path | IO[bytes], user_data:
     ...
     await edps.analyse_asset(input_file, zip_output, user_data)
     ...
+```
+
+# Command Line Interface
+
+After having installed it, can just invoke the EDPS from your command line like this:
+
+```bash
+# If you installed via uv:
+uv run edps_cli --help
+# If you installed by any other means:
+edps_cli --help
 ```

@@ -1,15 +1,12 @@
 import os
 import pickle
 import shutil
-from datetime import datetime, timezone
 from io import FileIO
 from logging import getLogger
 from pathlib import Path
 from typing import Awaitable, Callable
 
-from extended_dataset_profile import AssetReference, DataSpace, License, Publisher
 from extended_dataset_profile.models.v1.edp import ExtendedDatasetProfile
-from pydantic import HttpUrl
 from pytest import fixture
 
 from edps.analyzers.structured.importer import csv_import_dataframe
@@ -296,25 +293,13 @@ def path_language_deu_eng_wiki_llm_txt():
 
 
 @fixture(scope="session")
-def user_provided_data():
-    return UserProvidedEdpData(
-        assetRefs=[
-            AssetReference(
-                assetId="my-dataset-id",
-                dataSpace=DataSpace(name="TestDataSpace", url="https://beebucket.ai/en/"),
-                assetUrl=HttpUrl("https://beebucket.ai/en/"),
-                assetVersion="2.3.1",
-                publisher=Publisher(name="beebucket"),
-                publishDate=datetime(year=1995, month=10, day=10, hour=10, tzinfo=timezone.utc),
-                license=License(url="https://opensource.org/license/mit"),
-            )
-        ],
-        name="dataset-dummy-name",
-        dataCategory="TestDataCategory",
-        description="Our very first test edp",
-        tags=["test", "csv", "Äöüß"],
-        freely_available=True,
-    )
+def path_user_provided_data():
+    return TESTS_ROOT_PATH / "data/user_provided_data.json"
+
+
+@fixture(scope="session")
+def user_provided_data(path_user_provided_data):
+    return UserProvidedEdpData.model_validate_json(path_user_provided_data.read_bytes())
 
 
 @fixture(scope="session")

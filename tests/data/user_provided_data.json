@@ -1,0 +1,42 @@
+{
+    "name": "dataset-dummy-name",
+    "assetRefs": [
+        {
+            "assetId": "my-dataset-id",
+            "assetUrl": "https://beebucket.ai/en/",
+            "assetVersion": "2.3.1",
+            "dataSpace": {
+                "name": "TestDataSpace",
+                "url": "https://beebucket.ai/en/"
+            },
+            "publisher": {
+                "name": "beebucket",
+                "url": null
+            },
+            "publishDate": "1995-10-10T10:00:00Z",
+            "license": {
+                "name": null,
+                "url": "https://opensource.org/license/mit"
+            }
+        }
+    ],
+    "dataCategory": "TestDataCategory",
+    "assetProcessingStatus": "Original Data",
+    "description": "Our very first test edp",
+    "tags": [
+        "test",
+        "csv",
+        "Äöüß"
+    ],
+    "dataSubCategory": null,
+    "assetTypeInfo": null,
+    "transferTypeFlag": null,
+    "transferTypeFrequency": null,
+    "growthFlag": null,
+    "immutabilityFlag": null,
+    "allowedForAiTraining": null,
+    "nda": null,
+    "dpa": null,
+    "dataLog": null,
+    "freely_available": true
+}
