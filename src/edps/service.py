@@ -1,9 +1,11 @@
 import hashlib
+import shutil
 import warnings
 from dataclasses import dataclass
-from logging import getLogger
+from logging import Logger, getLogger
 from pathlib import Path, PurePosixPath
-from typing import Dict, Iterator, List, Optional, Tuple, Type, cast
+from tempfile import TemporaryDirectory
+from typing import IO, Dict, Iterator, List, Optional, Tuple, Type, cast
 from warnings import warn
 
 import easyocr
@@ -30,12 +32,14 @@ from pydantic import BaseModel
 import edps
 from edps.analyzers.structured import determine_periodicity
 from edps.compression import DECOMPRESSION_ALGORITHMS
+from edps.compression.zip import ZipAlgorithm
 from edps.file import calculate_size
 from edps.filewriter import write_edp
 from edps.importers import get_importable_types
 from edps.report import PdfReportGenerator, ReportInput
 from edps.taskcontext import TaskContext
-from edps.types import AugmentedColumn, ComputedEdpData, DataSet, UserProvidedEdpData
+from edps.taskcontextimpl import TaskContextImpl
+from edps.types import AugmentedColumn, ComputedEdpData, Config, DataSet, UserProvidedEdpData
 
 
 class UserInputError(RuntimeError):
@@ -49,7 +53,14 @@ def dump_service_info():
     logger.info("The following compressions are supported: [%s]", ", ".join(implemented_decompressions))
 
 
-async def analyse_asset(ctx: TaskContext, user_data: UserProvidedEdpData) -> Path:
+async def analyse_asset(
+    input_file: Path,
+    zip_output: Path | IO[bytes],
+    user_data: UserProvidedEdpData,
+    config: Optional[Config] = None,
+    logger: Optional[Logger] = None,
+    copy_report_to: Optional[Path] = None,
+) -> ExtendedDatasetProfile:
     """
     Let the service analyse the assets in ctx.input_path.
     The result (EDP JSON, plots and report) is written to ctx.output_path.
@@ -67,13 +78,26 @@ async def analyse_asset(ctx: TaskContext, user_data: UserProvidedEdpData) -> Pat
     Path
         File path to the generated EDP JSON (relative to ctx.output_path).
     """
-    computed_data = await _compute_asset(ctx)
-    edp = ExtendedDatasetProfile(**_as_dict(computed_data), **_as_dict(user_data))
-    main_ref = user_data.assetRefs[0]
-    json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "")
-    json_path = await write_edp(ctx, PurePosixPath(json_name), edp)
-    await _generate_report(ctx, edp)
-    return json_path
+    if config is None:
+        config = Config()
+
+    if logger is None:
+        logger = getLogger("edps")
+
+    with TemporaryDirectory() as work_dir_str:
+        work_dir = Path(work_dir_str)
+        task_context = TaskContextImpl(config=config, logger=logger, base_path=work_dir)
+        shutil.copy(input_file, task_context.input_path)
+        computed_data = await _compute_asset(task_context)
+        edp = ExtendedDatasetProfile(**_as_dict(computed_data), **_as_dict(user_data))
+        main_ref = user_data.assetRefs[0]
+        json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "")
+        await write_edp(task_context, PurePosixPath(json_name), edp)
+        await _generate_report(task_context, edp)
+        await ZipAlgorithm().compress(task_context.output_path, zip_output)
+        if copy_report_to is not None:
+            shutil.copy(task_context.report_file_path, copy_report_to)
+        return edp
 
 
 async def _compute_asset(ctx: TaskContext) -> ComputedEdpData:

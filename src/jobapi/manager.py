@@ -7,14 +7,11 @@ from datetime import UTC, datetime
 from logging import Logger, getLogger
 from pathlib import Path
 from shutil import copyfileobj
-from tempfile import TemporaryDirectory
 from typing import Iterator, Optional
 from uuid import UUID, uuid4
 
 from edps import analyse_asset, dump_service_info
-from edps.compression.zip import ZipAlgorithm
 from edps.file import build_real_sub_path, sanitize_path
-from edps.taskcontextimpl import TaskContextImpl
 from jobapi.config import AppConfig
 from jobapi.exception import ApiClientException
 from jobapi.repo import Job, JobRepository
@@ -268,16 +265,18 @@ class AnalysisJobProcessor:
     @staticmethod
     async def _process_job_worker(job: Job, job_logger: Logger):
         logger.debug("Job data directory: %s", job.job_base_dir)
-        with TemporaryDirectory() as temp_working_dir:
-            logger.debug("Temporary working directory: %s", temp_working_dir)
-            ctx = TaskContextImpl(job.configuration, job_logger, Path(temp_working_dir))
-            shutil.copytree(job.input_data_dir, ctx.input_path, dirs_exist_ok=True)
-            main_ref = job.user_provided_edp_data.assetRefs[0]
-            job_logger.info("Analysing asset '%s' version '%s'...", main_ref.assetId, main_ref.assetVersion)
-            await analyse_asset(ctx, job.user_provided_edp_data)
-            await ZipAlgorithm().compress(ctx.output_path, job.zip_archive)
-            if ctx.report_file_path.exists():
-                shutil.copy(ctx.report_file_path, job.report_file)
+        input_files = [path for path in job.input_data_dir.iterdir() if path.is_file()]
+        input_file_count = len(input_files)
+        if input_file_count != 1:
+            raise RuntimeError(f"Expected exactly one input file, got {input_file_count}.")
+        await analyse_asset(
+            input_file=input_files[0],
+            zip_output=job.zip_archive,
+            user_data=job.user_provided_edp_data,
+            config=job.configuration,
+            logger=logger,
+            copy_report_to=job.report_file,
+        )
 
     @staticmethod
     async def _cancellation_listener(job_id: UUID, job_repo: JobRepository):

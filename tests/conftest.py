@@ -1,21 +1,20 @@
+import os
 import pickle
 import shutil
 from datetime import datetime, timezone
+from io import FileIO
 from logging import getLogger
 from pathlib import Path
+from typing import Awaitable, Callable
 
-from extended_dataset_profile import (
-    AssetReference,
-    DataSpace,
-    License,
-    Publisher,
-)
+from extended_dataset_profile import AssetReference, DataSpace, License, Publisher
+from extended_dataset_profile.models.v1.edp import ExtendedDatasetProfile
 from pydantic import HttpUrl
 from pytest import fixture
 
 from edps.analyzers.structured.importer import csv_import_dataframe
 from edps.filewriter import setup_matplotlib
-from edps.service import download_artifacts
+from edps.service import analyse_asset, download_artifacts
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
 from edps.types import Config, UserProvidedEdpData
@@ -357,3 +356,14 @@ async def path_data_test_pickle(ctx, path_data_test_csv, tmp_path):
     with open(pickle_path, "wb") as file:  # Use "wb" mode to write in binary
         pickle.dump(dataframe, file)
     return pickle_path
+
+
+@fixture(scope="session")
+def null_dev():
+    with FileIO(os.devnull, mode="w") as dev:
+        yield dev
+
+
+@fixture(scope="session")
+def analyse_asset_fn(null_dev, user_provided_data, logger) -> Callable[[Path], Awaitable[ExtendedDatasetProfile]]:
+    return lambda path: analyse_asset(path, null_dev, user_provided_data, logger=logger)

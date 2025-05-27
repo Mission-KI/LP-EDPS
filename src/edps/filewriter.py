@@ -22,7 +22,7 @@ MATPLOTLIB_PLOT_FORMAT = ".png"
 MATPLOTLIB_STYLE_PATH = Path(__file__).parent / "styles/plot.mplstyle"
 
 
-async def write_edp(ctx: TaskContext, name: PurePosixPath, edp: ExtendedDatasetProfile) -> Path:
+async def write_edp(ctx: TaskContext, name: PurePosixPath, edp: ExtendedDatasetProfile):
     """Write EDP to a JSON file.
 
     Create a file with the given name (and ".json" extension) in ctx.output_path.
@@ -34,7 +34,6 @@ async def write_edp(ctx: TaskContext, name: PurePosixPath, edp: ExtendedDatasetP
         json: str = edp.model_dump_json(by_alias=True)
         await asyncio.to_thread(io_wrapper.write, json)
     ctx.logger.debug('Generated EDP file "%s"', relative_save_path)
-    return relative_save_path
 
 
 def setup_matplotlib():
