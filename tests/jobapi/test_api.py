@@ -3,11 +3,11 @@ from typing import List
 from uuid import uuid4
 
 import pytest
-from httpx import ASGITransport, AsyncClient, Response
+from httpx import ASGITransport, AsyncClient, Headers, Response
 
 from jobapi.__main__ import init_fastapi
 from jobapi.config import AppConfig
-from jobapi.types import JobData, JobState, JobView
+from jobapi.types import JobData, JobState, JobView, MdsJobView
 
 
 @pytest.fixture
@@ -28,7 +28,9 @@ async def test_api(test_client: AsyncClient, user_provided_data, path_data_test_
     job_data = JobData(user_provided_edp_data=user_provided_data)
     response = await test_client.post("/v1/dataspace/analysisjob", content=job_data.model_dump_json(by_alias=True))
     assert response.status_code == 200, response.text
-    job = JobView.model_validate(response.json())
+    response_json = response.json()
+    assert "mds_upload_link" not in response_json
+    job = JobView.model_validate(response_json)
     assert job.state == JobState.WAITING_FOR_DATA
 
     asset_path = path_data_test_csv
@@ -110,6 +112,22 @@ async def test_api_cancel_running(test_client: AsyncClient, user_provided_data, 
     response = await test_client.get(f"/v1/dataspace/analysisjob/{job.job_id}/status")
     job = extract_job_view(response)
     assert job.state == JobState.CANCELLED
+
+
+@pytest.mark.slow
+async def test_mds_create_job_call(test_client: AsyncClient, user_provided_data):
+    job_data = JobData(user_provided_edp_data=user_provided_data)
+    TEST_BASE_URL = "https://beebucket.ai"
+    mds_header = Headers({"x-service-base-url": TEST_BASE_URL})
+    response = await test_client.post(
+        "/v1/dataspace/analysisjob", content=job_data.model_dump_json(by_alias=True), headers=mds_header
+    )
+    assert response.status_code == 200, response.text
+    response_json = response.json()
+    assert "upload_url" in response_json
+    job = MdsJobView.model_validate(response_json)
+    assert job.state == JobState.WAITING_FOR_DATA
+    assert str(job.upload_url) == f"{TEST_BASE_URL}/api/{job.job_id}"
 
 
 async def _wait_until_state_is_not(client: AsyncClient, job: JobView, blocking_states: List[JobState], timeout: float):
