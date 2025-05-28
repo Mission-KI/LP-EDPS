@@ -45,7 +45,7 @@ dependencies = [
     "sqlmodel",
     "pg8000",
     "pillow",
-    "opencv-python",
+    "opencv-python-headless",
     "scikit-image",
     "brisque",
     "PyWavelets",
