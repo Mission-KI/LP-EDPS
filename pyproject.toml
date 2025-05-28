@@ -26,6 +26,7 @@ dependencies = [
     "argparse",
     "extended-dataset-profile @ git+https://github.com/Beebucket/extended_dataset_profile@1.0.0",
     "boto3",
+    "click<8.2",
     "filetype",
     "lingua-language-detector",
     "matplotlib",
