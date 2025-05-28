@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "edps"
@@ -92,14 +92,18 @@ test = [
 ]
 dev = ["edps[test]"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
 
-[tool.setuptools.package-data]
-"edps" = ["styles/*.mplstyle", "report/templates/*.jinja"]
+[tool.hatch.version]
+source = "vcs"
 
-[tool.setuptools.dynamic]
-version = { file = "dist/VERSION.txt" }
+[tool.hatch.build.hooks.vcs]
+version-file = "src/edps/_version.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.ruff]
 line-length = 120

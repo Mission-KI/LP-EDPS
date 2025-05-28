@@ -8,10 +8,6 @@ To build the Docker image locally you need to run the script:
 
 Locally you can e.g. use `VERSION=0.0.0`.
 
-This first runs the script to build the wheel:
-
-`VERSION=... ./build_wheel.sh`
-
 ## Run Docker containers
 
 Before running Docker Compose you need to copy the file `env.template` to `.env` in directory `docker/jobapi` and adjust it if needed. For configuration see [Docker README](../docker/README.md).

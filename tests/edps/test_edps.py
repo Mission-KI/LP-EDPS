@@ -18,7 +18,7 @@ from extended_dataset_profile import (
 )
 from pytest import fixture, mark, raises
 
-from edps import analyse_asset
+from edps import __version__, analyse_asset
 from edps.service import _compute_asset
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
@@ -27,7 +27,6 @@ from edps.types import (
     ComputedEdpData,
     Config,
 )
-from edps.version import __version__
 from tests.conftest import copy_asset_to_ctx_input_dir
 
 
