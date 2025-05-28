@@ -71,6 +71,8 @@ sequenceDiagram
 
 First the **EDC Connector** creates a new analysis job by uploading the user-metadata to the API. The API returns the **job info** containing the randomly generated **Job-ID** and status (at this point **WAITING_FOR_DATA**).
 
+You can specify the "x-service-base-url" header field in this call. That will lead to the response containing an extra field "upload_url", which contains "{x_service_base_url}/api/{job_id}".
+
 ### Upload data
 
 Referring to the new job using **Job-ID** the caller uploads the raw input data (e.g. a CSV file) and provides its filename. The API again returns the **job info**, the status now being **QUEUED**.

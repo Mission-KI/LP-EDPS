@@ -172,3 +172,4 @@ uv.lock
 .idea
 output/
 work/
+src/edps/_version.py
