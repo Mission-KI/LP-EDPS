@@ -30,12 +30,12 @@ async def test_all_reports(ctx: TaskContext, asset_path, report_output_path, ana
 
     report_html = report_output_path / f"{asset_path.name}.html"
     with report_html.open("wb") as file_io:
-        await HtmlReportGenerator().generate(ctx, report_input, ctx.output_path, file_io)
+        await HtmlReportGenerator().generate(ctx, report_input, file_io)
     assert report_html.exists()
 
     report_pdf = report_output_path / f"{asset_path.name}.pdf"
     with report_pdf.open("wb") as file_io:
-        await PdfReportGenerator().generate(ctx, report_input, ctx.output_path, file_io)
+        await PdfReportGenerator().generate(ctx, report_input, file_io)
     assert report_pdf.exists()
 
     pdf_text = read_pdf_text(report_pdf)

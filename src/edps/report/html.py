@@ -2,7 +2,6 @@ import os
 from dataclasses import asdict
 from datetime import datetime
 from io import BufferedIOBase
-from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
 from extended_dataset_profile import (
@@ -38,7 +37,7 @@ class HtmlReportGenerator(ReportGenerator):
     def __init__(self):
         self._env = _init_environment()
 
-    async def generate(self, ctx: TaskContext, input: ReportInput, base_dir: Path, output_buffer: BufferedIOBase):
+    async def generate(self, ctx: TaskContext, input: ReportInput, output_buffer: BufferedIOBase):
         template = self._env.get_template("report.html.jinja")
         transformed_data = prepare_data(input)
         html = template.render(asdict(transformed_data))

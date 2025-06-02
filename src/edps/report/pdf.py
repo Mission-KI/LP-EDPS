@@ -1,6 +1,5 @@
 import os
 from io import BufferedIOBase, BytesIO
-from pathlib import Path
 from typing import Any
 
 from xhtml2pdf import pisa
@@ -15,15 +14,15 @@ from ..taskcontext import TaskContext
 class PdfReportGenerator(ReportGenerator):
     """Generates a PDF report."""
 
-    async def generate(self, ctx: TaskContext, input: ReportInput, base_dir: Path, output_buffer: BufferedIOBase):
+    async def generate(self, ctx: TaskContext, input: ReportInput, output_buffer: BufferedIOBase):
         html_buffer = BytesIO()
-        await HtmlReportGenerator().generate(ctx, input, base_dir, html_buffer)
+        await HtmlReportGenerator().generate(ctx, input, html_buffer)
 
         pisa_context: PisaContext = pisa.CreatePDF(
             html_buffer,
             encoding="utf-8",
             dest=output_buffer,
-            link_callback=lambda url, origin: build_real_sub_path(base_dir, str(url)).as_posix(),
+            link_callback=lambda url, origin: build_real_sub_path(ctx.output_path, str(url)).as_posix(),
         )
         self._check_output(ctx, pisa_context, output_buffer)
 
