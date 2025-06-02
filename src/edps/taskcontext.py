@@ -74,6 +74,10 @@ class TaskContext(ABC):
         """Build a new output reference that can be used for a file name in the output path consisting of all the name parts."""
 
     @abstractmethod
+    def prepare_output_path(self, name: str) -> PurePosixPath:
+        """Sanitizes a name to use as output path."""
+
+    @abstractmethod
     def relative_path(self, path: Path) -> Path:
         """Convert the input path to a path relative to the TaskContext base path."""
 

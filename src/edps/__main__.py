@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, CliApp
 
-from edps.service import analyse_asset
+from edps.service import analyse_asset_to_zip
 from edps.types import Config, UserProvidedEdpData
 
 
@@ -29,7 +29,7 @@ class CommandLineInterface(BaseSettings, cli_parse_args=True, cli_prog_name="edp
 
         user_provided_data = UserProvidedEdpData.model_validate_json(self.user_provided_data.read_bytes())
 
-        await analyse_asset(
+        await analyse_asset_to_zip(
             input_file=self.input_file,
             user_data=user_provided_data,
             zip_output=self.output_path,

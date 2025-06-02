@@ -1,10 +1,9 @@
+import asyncio
 import hashlib
 import shutil
-import warnings
 from dataclasses import dataclass
 from logging import Logger, getLogger
-from pathlib import Path, PurePosixPath
-from tempfile import TemporaryDirectory
+from pathlib import Path
 from typing import IO, Dict, Iterator, List, Optional, Tuple, Type, cast
 from warnings import warn
 
@@ -34,12 +33,13 @@ from edps.analyzers.structured import determine_periodicity
 from edps.compression import DECOMPRESSION_ALGORITHMS
 from edps.compression.zip import ZipAlgorithm
 from edps.file import calculate_size
-from edps.filewriter import write_edp
 from edps.importers import get_importable_types
 from edps.report import PdfReportGenerator, ReportInput
 from edps.taskcontext import TaskContext
-from edps.taskcontextimpl import TaskContextImpl
+from edps.taskcontextimpl import create_temporary_task_context
 from edps.types import AugmentedColumn, ComputedEdpData, Config, DataSet, UserProvidedEdpData
+
+TEXT_ENCODING = "utf-8"
 
 
 class UserInputError(RuntimeError):
@@ -53,13 +53,42 @@ def dump_service_info():
     logger.info("The following compressions are supported: [%s]", ", ".join(implemented_decompressions))
 
 
-async def analyse_asset(
+class AnalyzeResult:
+    def __init__(self, task_context: TaskContext, edp: ExtendedDatasetProfile):
+        self._task_context = task_context
+        self.edp = edp
+
+    @property
+    def output_path(self) -> Path:
+        return self._task_context.output_path
+
+    async def write_edp_to_output(self) -> Path:
+        main_ref = self.edp.assetRefs[0]
+        json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "") + ".json"
+        save_path = self._task_context.prepare_output_path(json_name)
+        relative_save_path = Path(save_path.relative_to(self._task_context.output_path))
+        with open(save_path, "wt", encoding=TEXT_ENCODING) as io_wrapper:
+            json: str = self.edp.model_dump_json(by_alias=True)
+            await asyncio.to_thread(io_wrapper.write, json)
+        self._task_context.logger.debug('Generated EDP file "%s"', relative_save_path)
+        return relative_save_path
+
+    async def write_pdf_report_to_output(self) -> Path:
+        input = ReportInput(edp=self.edp)
+        with self._task_context.report_file_path.open("wb") as file_io:
+            await PdfReportGenerator().generate(self._task_context, input, file_io)
+        return self._task_context.report_file_path
+
+    async def compress_output_to(self, zip_output: Path | IO[bytes]) -> None:
+        await ZipAlgorithm().compress(self._task_context.output_path, zip_output)
+
+
+async def analyse_asset_to_zip(
     input_file: Path,
     zip_output: Path | IO[bytes],
     user_data: UserProvidedEdpData,
     config: Optional[Config] = None,
     logger: Optional[Logger] = None,
-    copy_report_to: Optional[Path] = None,
 ) -> ExtendedDatasetProfile:
     """
     Let the service analyse the assets in ctx.input_path.
@@ -84,20 +113,19 @@ async def analyse_asset(
     if logger is None:
         logger = getLogger("edps")
 
-    with TemporaryDirectory() as work_dir_str:
-        work_dir = Path(work_dir_str)
-        task_context = TaskContextImpl(config=config, logger=logger, base_path=work_dir)
-        shutil.copy(input_file, task_context.input_path)
-        computed_data = await _compute_asset(task_context)
-        edp = ExtendedDatasetProfile(**_as_dict(computed_data), **_as_dict(user_data))
-        main_ref = user_data.assetRefs[0]
-        json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "")
-        await write_edp(task_context, PurePosixPath(json_name), edp)
-        await _generate_report(task_context, edp)
-        await ZipAlgorithm().compress(task_context.output_path, zip_output)
-        if copy_report_to is not None:
-            shutil.copy(task_context.report_file_path, copy_report_to)
-        return edp
+    with create_temporary_task_context(config=config, logger=logger) as task_context:
+        result = await analyze_asset(input_file=input_file, task_context=task_context, user_data=user_data)
+        await result.write_edp_to_output()
+        await result.write_pdf_report_to_output()
+        await result.compress_output_to(zip_output)
+        return result.edp
+
+
+async def analyze_asset(input_file: Path, task_context: TaskContext, user_data: UserProvidedEdpData) -> AnalyzeResult:
+    shutil.copy(input_file, task_context.input_path)
+    computed_data = await _compute_asset(task_context)
+    edp = ExtendedDatasetProfile(**_as_dict(computed_data), **_as_dict(user_data))
+    return AnalyzeResult(task_context=task_context, edp=edp)
 
 
 async def _compute_asset(ctx: TaskContext) -> ComputedEdpData:
@@ -203,16 +231,6 @@ def _iterate_all_temporal_consistencies(edp: ComputedEdpData) -> Iterator[DataFr
             dataframe["differentAbundancies"] = [item.differentAbundancies for item in row.temporalConsistencies]
             dataframe["numberOfGaps"] = [item.numberOfGaps for item in row.temporalConsistencies]
             yield dataframe
-
-
-async def _generate_report(ctx: TaskContext, edp: ExtendedDatasetProfile):
-    try:
-        input = ReportInput(edp=edp)
-        with ctx.report_file_path.open("wb") as file_io:
-            await PdfReportGenerator().generate(ctx, input, ctx.output_path, file_io)
-    except Exception as exception:
-        ctx.logger.warning("Error generating the report, continuing anyways..", exc_info=exception)
-        warnings.warn(f"Error generating the report. Error: {exception}")
 
 
 def _as_dict(model: BaseModel):

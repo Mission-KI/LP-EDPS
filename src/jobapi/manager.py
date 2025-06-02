@@ -10,8 +10,10 @@ from shutil import copyfileobj
 from typing import Iterator, Optional
 from uuid import UUID, uuid4
 
-from edps import analyse_asset, dump_service_info
+from edps import dump_service_info
 from edps.file import build_real_sub_path, sanitize_path
+from edps.service import analyze_asset
+from edps.taskcontextimpl import create_temporary_task_context
 from jobapi.config import AppConfig
 from jobapi.exception import ApiClientException
 from jobapi.repo import Job, JobRepository
@@ -269,14 +271,14 @@ class AnalysisJobProcessor:
         input_file_count = len(input_files)
         if input_file_count != 1:
             raise RuntimeError(f"Expected exactly one input file, got {input_file_count}.")
-        await analyse_asset(
-            input_file=input_files[0],
-            zip_output=job.zip_archive,
-            user_data=job.user_provided_edp_data,
-            config=job.configuration,
-            logger=logger,
-            copy_report_to=job.report_file,
-        )
+        with create_temporary_task_context(config=job.configuration, logger=logger) as task_context:
+            result = await analyze_asset(
+                input_file=input_files[0], task_context=task_context, user_data=job.user_provided_edp_data
+            )
+            await result.write_edp_to_output()
+            report_path = await result.write_pdf_report_to_output()
+            shutil.copy(report_path, job.report_file)
+            await result.compress_output_to(job.zip_archive)
 
     @staticmethod
     async def _cancellation_listener(job_id: UUID, job_repo: JobRepository):

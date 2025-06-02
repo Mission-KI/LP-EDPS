@@ -1,12 +1,14 @@
 import asyncio
 import warnings
+from contextlib import contextmanager
 from logging import Logger
 from pathlib import Path, PurePosixPath
+from tempfile import TemporaryDirectory
 from typing import Awaitable, Callable, Concatenate, Iterator, Optional, Unpack, cast
 
 from extended_dataset_profile import FileProperties
 
-from edps.file import determine_file_type, sanitize_path
+from edps.file import build_real_sub_path, determine_file_type, sanitize_path
 from edps.importers import lookup_importer, lookup_unsupported_type_message
 from edps.taskcontext import TaskContext
 from edps.types import Config, DataSet, is_dataset
@@ -73,6 +75,19 @@ class TaskContextImpl(TaskContext):
         ref = parent_ref + "/" + final_part if parent_ref else final_part
         ref = ref.replace(".", "_")
         return PurePosixPath(ref)
+
+    def prepare_output_path(self, name: str):
+        save_path = build_real_sub_path(self.output_path, sanitize_path(path=name))
+        if save_path.exists():
+            message = (
+                f'The path "{save_path}" already exists, will overwrite! This is most likely an implementation error.'
+            )
+            warnings.warn(message, RuntimeWarning)
+            self.logger.warning(message)
+            save_path.unlink()
+        else:
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+        return save_path
 
     def relative_path(self, path: Path) -> Path:
         return path.resolve().relative_to(self._base_path)
@@ -197,3 +212,9 @@ class TaskContextImpl(TaskContext):
                 "There is already a dataset in this context. You need to put exactly one dataset into this dataset context!"
             )
         self._dataset = dataset
+
+
+@contextmanager
+def create_temporary_task_context(config: Config, logger: Logger):
+    with TemporaryDirectory() as work_dir:
+        yield TaskContextImpl(config=config, logger=logger, base_path=Path(work_dir))

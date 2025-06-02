@@ -10,7 +10,7 @@ from extended_dataset_profile.models.v1.edp import ExtendedDatasetProfile
 from pytest import fixture
 
 from edps.analyzers.structured.importer import csv_import_dataframe
-from edps.service import analyse_asset
+from edps.service import analyze_asset
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
 from edps.types import Config, UserProvidedEdpData
@@ -342,6 +342,11 @@ def null_dev():
         yield dev
 
 
-@fixture(scope="session")
-def analyse_asset_fn(null_dev, user_provided_data, logger) -> Callable[[Path], Awaitable[ExtendedDatasetProfile]]:
-    return lambda path: analyse_asset(path, null_dev, user_provided_data, logger=logger)
+async def _analyze_asset_get_edp(*args, **kwargs):
+    result = await analyze_asset(*args, **kwargs)
+    return result.edp
+
+
+@fixture
+def analyse_asset_fn(user_provided_data, ctx) -> Callable[[Path], Awaitable[ExtendedDatasetProfile]]:
+    return lambda path: _analyze_asset_get_edp(input_file=path, task_context=ctx, user_data=user_provided_data)

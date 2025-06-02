@@ -7,6 +7,7 @@ from pypdf import PdfReader
 from pytest import fixture, mark
 
 from edps.report import HtmlReportGenerator, PdfReportGenerator, ReportInput
+from edps.service import analyze_asset
 from edps.taskcontext import TaskContext
 
 
@@ -19,14 +20,16 @@ def report_output_path(path_work):
 
 # This test generates multiple reports because fixture "asset_path" iterates through multiple assets.
 @mark.slow
-async def test_all_reports(ctx: TaskContext, asset_path, report_output_path, analyse_asset_fn):
+async def test_all_reports(ctx: TaskContext, asset_path, report_output_path, user_provided_data):
     # Ignore warnings which occur for some of the assets.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        edp = await analyse_asset_fn(asset_path)
+        result = await analyze_asset(asset_path, ctx, user_provided_data)
+
+    await result.write_edp_to_output()
     # A PDF report should already have been created during normal asset analysis.
     # In this test we explicitly create another HTML and PDF report anyways.
-    report_input = ReportInput(edp=edp)
+    report_input = ReportInput(edp=result.edp)
 
     report_html = report_output_path / f"{asset_path.name}.html"
     with report_html.open("wb") as file_io:

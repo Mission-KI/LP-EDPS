@@ -8,7 +8,7 @@ from typing import Tuple
 from extended_dataset_profile import AssetReference, DataSpace, License, Publisher
 from pydantic import HttpUrl, ValidationError
 
-from edps import analyse_asset
+from edps import analyse_asset_to_zip
 from edps.file import sanitize_file_part
 from edps.types import Config, UserProvidedEdpData
 from pontusx.args import Args
@@ -79,6 +79,6 @@ async def run_service(logger: Logger, args: Args):
     with TemporaryDirectory() as input_file_dir:
         input_file = Path(input_file_dir) / input_filename
         shutil.copy(args.raw_data_file, input_file)
-        await analyse_asset(
+        await analyse_asset_to_zip(
             input_file=input_file, zip_output=target_archive, user_data=user_provided_edp_data, logger=logger
         )
