@@ -173,6 +173,10 @@ ignore-packages = [
 partial-match = true
 
 [tool.coverage.run]
+source = ["./src"]
+# The omit section handles a bug in opencv-python. They accidentally deliver
+# pyc files for py files that do not exist anymore.
+omit = ["config.py", "config-3.py"]
 relative_files = true
 
 [tool.uv.sources]
