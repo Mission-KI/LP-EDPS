@@ -6,8 +6,10 @@ modal datasets.
 
 # User Info
 
-The Extended Dataset Profile Service is shipped as a docker image. The path
-of the docker image is always annotated on the release notes.
+The Extended Dataset Profile Service is shipped as a docker image. The Docker images are found here:
+https://hub.docker.com/r/beebucket/edps
+Docker images are tagged using the exact Git tag from which they are built.
+
 You can also [create the docker image locally by yourself](#scripts).
 
 The extended data set profile service currently contains four entry points:
