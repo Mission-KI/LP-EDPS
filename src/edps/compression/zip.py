@@ -1,15 +1,16 @@
 import asyncio
 from pathlib import Path
+from typing import IO
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from edps.compression.base import CompressionAlgorithm, DecompressionAlgorithm
 
 
 class ZipAlgorithm(CompressionAlgorithm, DecompressionAlgorithm):
-    async def compress(self, source_directory: Path, target_archive: Path) -> None:
+    async def compress(self, source_directory: Path, target_archive: Path | IO[bytes]) -> None:
         await asyncio.to_thread(self._compress, source_directory, target_archive)
 
-    def _compress(self, source_directory: Path, target_archive: Path) -> None:
+    def _compress(self, source_directory: Path, target_archive: Path | IO[bytes]) -> None:
         # Create a ZipFile object in write mode
         with ZipFile(target_archive, "w", ZIP_DEFLATED) as zip_file:
             # Traverse the folder and its subdirectories

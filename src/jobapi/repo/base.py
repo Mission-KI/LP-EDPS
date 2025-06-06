@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import AsyncIterator, Optional
 from uuid import UUID
 
-from edps.service import REPORT_FILENAME
+from edps.taskcontext import REPORT_FILENAME
 from edps.types import Config, UserProvidedEdpData
 from jobapi.types import JobData, JobState, JobView
 

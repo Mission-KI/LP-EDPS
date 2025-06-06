@@ -3,7 +3,6 @@ import io
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-import ffmpeg
 import numpy as np
 import scipy
 from extended_dataset_profile import AudioDataSet
@@ -12,6 +11,8 @@ from numpy import ndarray
 
 from edps.filewriter import get_pyplot_writer
 from edps.taskcontext import TaskContext
+
+from .wrapped_ffmpeg import input as ffmpeg_input
 
 
 async def analyse_audio(
@@ -67,7 +68,7 @@ def load_audio_samples(path: Path, stream_number: int) -> tuple[int, ndarray]:
     # Convert to mono WAV format in memory, take nth audio stream.
     stream_mapping = f"0:a:{stream_number}"
     wav_data, _ = (
-        ffmpeg.input(path)
+        ffmpeg_input(path)
         .output("pipe:", format="wav", acodec="pcm_s16le", ar=44100, ac=1, map=stream_mapping)
         .overwrite_output()
         .run(capture_stdout=True, capture_stderr=True)

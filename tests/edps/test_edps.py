@@ -9,7 +9,6 @@ from extended_dataset_profile import (
     Augmentation,
     DataSetType,
     ExtendedDatasetProfile,
-    FileReference,
     ImageColorMode,
     ModificationState,
     Resolution,
@@ -18,7 +17,7 @@ from extended_dataset_profile import (
 )
 from pytest import fixture, mark, raises
 
-from edps import __version__, analyse_asset
+from edps import __version__
 from edps.service import _compute_asset
 from edps.taskcontext import TaskContext
 from edps.taskcontextimpl import TaskContextImpl
@@ -44,11 +43,6 @@ def config_data_with_augmentations():
 @fixture
 def context_with_augmented_config(config_data_with_augmentations, logger, path_work):
     return TaskContextImpl(config_data_with_augmentations, logger, path_work)
-
-
-@fixture
-def analyse_asset_fn(ctx, user_provided_data) -> Callable[[Path], Awaitable[FileReference]]:
-    return lambda path: copy_and_analyse_asset(ctx, path, user_provided_data)
 
 
 @fixture
@@ -169,8 +163,7 @@ async def test_analyse_csv_counts(path_data_test_counts_csv, compute_asset_fn):
 
 @mark.asyncio
 async def test_analyse_roundtrip_csv(path_data_test_csv, analyse_asset_fn, ctx, user_provided_data):
-    edp_file = await analyse_asset_fn(path_data_test_csv)
-    edp = read_edp_file(ctx.output_path / edp_file)
+    edp = await analyse_asset_fn(path_data_test_csv)
     assert edp.assetRefs[0].assetId == user_provided_data.assetRefs[0].assetId
     assert edp.structuredDatasets[0].columnCount == 5
     assert edp.structuredDatasets[0].rowCount == 50
@@ -178,8 +171,7 @@ async def test_analyse_roundtrip_csv(path_data_test_csv, analyse_asset_fn, ctx, 
 
 @mark.asyncio
 async def test_seasonality_bast_csv(path_data_bast_csv, analyse_asset_fn, ctx):
-    edp_file = await analyse_asset_fn(path_data_bast_csv)
-    edp = read_edp_file(ctx.output_path / edp_file)
+    edp = await analyse_asset_fn(path_data_bast_csv)
     assert len(edp.structuredDatasets) == 1
     dataset = edp.structuredDatasets[0]
     columns_with_seasonality = list(filter(lambda col: len(col.seasonalities) > 0, dataset.numericColumns))
@@ -810,11 +802,6 @@ async def test_raise_on_only_unknown_datasets(analyse_asset_fn, tmp_path):
         file.write("This type is not supported")
     with raises((RuntimeWarning, RuntimeError)):
         await analyse_asset_fn(file_path)
-
-
-async def copy_and_analyse_asset(ctx: TaskContext, asset_path: Path, user_provided_data):
-    copy_asset_to_ctx_input_dir(asset_path, ctx)
-    return await analyse_asset(ctx, user_provided_data)
 
 
 async def copy_and_compute_asset(ctx: TaskContext, asset_path: Path):

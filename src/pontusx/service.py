@@ -8,11 +8,8 @@ from typing import Tuple
 from extended_dataset_profile import AssetReference, DataSpace, License, Publisher
 from pydantic import HttpUrl, ValidationError
 
-from edps import analyse_asset
-from edps.compression.zip import ZipAlgorithm
+from edps import analyse_asset_to_zip
 from edps.file import sanitize_file_part
-from edps.service import dump_service_info
-from edps.taskcontextimpl import TaskContextImpl
 from edps.types import Config, UserProvidedEdpData
 from pontusx.args import Args
 from pontusx.metadata import DDO, CustomData, read_ddo_file
@@ -76,18 +73,12 @@ async def run_service(logger: Logger, args: Args):
 
     file_extension = sanitize_file_part(file_extension)
     input_filename = f"data.{file_extension}"
+    main_ref = user_provided_edp_data.assetRefs[0]
+    target_archive = args.output_dir / f"{sanitize_file_part(main_ref.assetId)}.zip"
 
-    with TemporaryDirectory() as temp_working_dir_path:
-        ctx = TaskContextImpl(edps_config, logger, Path(temp_working_dir_path))
-
-        ctx.input_path.mkdir(parents=True, exist_ok=True)
-        shutil.copy(args.raw_data_file, ctx.input_path / input_filename)
-
-        dump_service_info()
-        logger.info("Processing asset..")
-        await analyse_asset(ctx, user_provided_edp_data)
-
-        logger.info("Zipping EDP..")
-        main_ref = user_provided_edp_data.assetRefs[0]
-        target_archive = args.output_dir / f"{sanitize_file_part(main_ref.assetId)}.zip"
-        await ZipAlgorithm().compress(ctx.output_path, target_archive)
+    with TemporaryDirectory() as input_file_dir:
+        input_file = Path(input_file_dir) / input_filename
+        shutil.copy(args.raw_data_file, input_file)
+        await analyse_asset_to_zip(
+            input_file=input_file, zip_output=target_archive, user_data=user_provided_edp_data, logger=logger
+        )

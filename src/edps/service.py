@@ -1,9 +1,10 @@
+import asyncio
 import hashlib
-import warnings
+import shutil
 from dataclasses import dataclass
-from logging import getLogger
-from pathlib import Path, PurePosixPath
-from typing import Dict, Iterator, List, Optional, Tuple, Type, cast
+from logging import Logger, getLogger
+from pathlib import Path
+from typing import IO, Dict, Iterator, List, Optional, Tuple, Type, cast
 from warnings import warn
 
 import easyocr
@@ -30,14 +31,15 @@ from pydantic import BaseModel
 import edps
 from edps.analyzers.structured import determine_periodicity
 from edps.compression import DECOMPRESSION_ALGORITHMS
+from edps.compression.zip import ZipAlgorithm
 from edps.file import calculate_size
-from edps.filewriter import write_edp
 from edps.importers import get_importable_types
 from edps.report import PdfReportGenerator, ReportInput
 from edps.taskcontext import TaskContext
-from edps.types import AugmentedColumn, ComputedEdpData, DataSet, UserProvidedEdpData
+from edps.taskcontextimpl import create_temporary_task_context
+from edps.types import AugmentedColumn, ComputedEdpData, Config, DataSet, UserProvidedEdpData
 
-REPORT_FILENAME = "report.pdf"
+TEXT_ENCODING = "utf-8"
 
 
 class UserInputError(RuntimeError):
@@ -51,7 +53,43 @@ def dump_service_info():
     logger.info("The following compressions are supported: [%s]", ", ".join(implemented_decompressions))
 
 
-async def analyse_asset(ctx: TaskContext, user_data: UserProvidedEdpData) -> Path:
+class AnalyzeResult:
+    def __init__(self, task_context: TaskContext, edp: ExtendedDatasetProfile):
+        self._task_context = task_context
+        self.edp = edp
+
+    @property
+    def output_path(self) -> Path:
+        return self._task_context.output_path
+
+    async def write_edp_to_output(self) -> Path:
+        main_ref = self.edp.assetRefs[0]
+        json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "") + ".json"
+        save_path = self._task_context.prepare_output_path(json_name)
+        relative_save_path = Path(save_path.relative_to(self._task_context.output_path))
+        with open(save_path, "wt", encoding=TEXT_ENCODING) as io_wrapper:
+            json: str = self.edp.model_dump_json(by_alias=True)
+            await asyncio.to_thread(io_wrapper.write, json)
+        self._task_context.logger.debug('Generated EDP file "%s"', relative_save_path)
+        return relative_save_path
+
+    async def write_pdf_report_to_output(self) -> Path:
+        input = ReportInput(edp=self.edp)
+        with self._task_context.report_file_path.open("wb") as file_io:
+            await PdfReportGenerator().generate(self._task_context, input, file_io)
+        return self._task_context.report_file_path
+
+    async def compress_output_to(self, zip_output: Path | IO[bytes]) -> None:
+        await ZipAlgorithm().compress(self._task_context.output_path, zip_output)
+
+
+async def analyse_asset_to_zip(
+    input_file: Path,
+    zip_output: Path | IO[bytes],
+    user_data: UserProvidedEdpData,
+    config: Optional[Config] = None,
+    logger: Optional[Logger] = None,
+) -> ExtendedDatasetProfile:
     """
     Let the service analyse the assets in ctx.input_path.
     The result (EDP JSON, plots and report) is written to ctx.output_path.
@@ -69,13 +107,25 @@ async def analyse_asset(ctx: TaskContext, user_data: UserProvidedEdpData) -> Pat
     Path
         File path to the generated EDP JSON (relative to ctx.output_path).
     """
-    computed_data = await _compute_asset(ctx)
+    if config is None:
+        config = Config()
+
+    if logger is None:
+        logger = getLogger("edps")
+
+    with create_temporary_task_context(config=config, logger=logger) as task_context:
+        result = await analyze_asset(input_file=input_file, task_context=task_context, user_data=user_data)
+        await result.write_edp_to_output()
+        await result.write_pdf_report_to_output()
+        await result.compress_output_to(zip_output)
+        return result.edp
+
+
+async def analyze_asset(input_file: Path, task_context: TaskContext, user_data: UserProvidedEdpData) -> AnalyzeResult:
+    shutil.copy(input_file, task_context.input_path)
+    computed_data = await _compute_asset(task_context)
     edp = ExtendedDatasetProfile(**_as_dict(computed_data), **_as_dict(user_data))
-    main_ref = user_data.assetRefs[0]
-    json_name = main_ref.assetId + ("_" + main_ref.assetVersion if main_ref.assetVersion else "")
-    json_path = await write_edp(ctx, PurePosixPath(json_name), edp)
-    await _generate_report(ctx, edp)
-    return json_path
+    return AnalyzeResult(task_context=task_context, edp=edp)
 
 
 async def _compute_asset(ctx: TaskContext) -> ComputedEdpData:
@@ -183,16 +233,6 @@ def _iterate_all_temporal_consistencies(edp: ComputedEdpData) -> Iterator[DataFr
             yield dataframe
 
 
-async def _generate_report(ctx: TaskContext, edp: ExtendedDatasetProfile):
-    try:
-        input = ReportInput(edp=edp)
-        with get_report_path(ctx).open("wb") as file_io:
-            await PdfReportGenerator().generate(ctx, input, ctx.output_path, file_io)
-    except Exception as exception:
-        ctx.logger.warning("Error generating the report, continuing anyways..", exc_info=exception)
-        warnings.warn(f"Error generating the report. Error: {exception}")
-
-
 def _as_dict(model: BaseModel):
     field_keys = type(model).model_fields.keys()
     return {key: model.__dict__[key] for key in field_keys}
@@ -272,13 +312,14 @@ def compute_sha256(file_path: Path) -> str:
     return sha256.hexdigest()
 
 
-def get_report_path(ctx: TaskContext) -> Path:
-    return ctx.output_path / REPORT_FILENAME
-
-
 def download_artifacts():
     """
     Downloads all artifacts needed for the service execution.
+    Therefore the service will not have to do any downloads after this to
+    function. This is especially useful when running in isolated environments.
+
+    This is optional for most installations. The required artifacts will
+    be lazy loaded if this function was not called.
     """
     static_ffmpeg.add_paths(weak=True)
     easyocr.Reader(["en", "de"], gpu=False, download_enabled=True, verbose=False)

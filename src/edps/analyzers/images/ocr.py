@@ -23,7 +23,7 @@ class OCR:
 
         :param languages: List of language codes (e.g. ['en']).
         """
-        self._reader = easyocr.Reader(lang_list=languages, gpu=False, download_enabled=False, verbose=False)
+        self._reader = easyocr.Reader(lang_list=languages, gpu=False, download_enabled=True, verbose=False)
 
     def read(self, img: np.ndarray) -> DataFrame:
         """

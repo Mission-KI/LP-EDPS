@@ -7,6 +7,8 @@ from extended_dataset_profile import FileProperties
 
 from edps.types import Config, DataSet
 
+REPORT_FILENAME = "report.pdf"
+
 
 class TaskContext(ABC):
     """Interface. A context provides a logger and supports executing sub-tasks."""
@@ -72,6 +74,10 @@ class TaskContext(ABC):
         """Build a new output reference that can be used for a file name in the output path consisting of all the name parts."""
 
     @abstractmethod
+    def prepare_output_path(self, name: str) -> PurePosixPath:
+        """Sanitizes a name to use as output path."""
+
+    @abstractmethod
     def relative_path(self, path: Path) -> Path:
         """Convert the input path to a path relative to the TaskContext base path."""
 
@@ -131,3 +137,7 @@ class TaskContext(ABC):
     async def import_file_with_result(self, path: Path, dataset_name: Optional[str] = None) -> DataSet:
         """Import and analyze the file if it's a supported type. The dataset is stored in the TaskContext and additionally returned.
         Contrary to method import_file() any occuring errors must be handled by the caller."""
+
+    @property
+    def report_file_path(self) -> Path:
+        return self.output_path / REPORT_FILENAME

@@ -7,8 +7,8 @@ from pypdf import PdfReader
 from pytest import fixture, mark
 
 from edps.report import HtmlReportGenerator, PdfReportGenerator, ReportInput
+from edps.service import analyze_asset
 from edps.taskcontext import TaskContext
-from tests.edps.test_edps import copy_and_analyse_asset, read_edp_file
 
 
 @fixture
@@ -24,20 +24,21 @@ async def test_all_reports(ctx: TaskContext, asset_path, report_output_path, use
     # Ignore warnings which occur for some of the assets.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        json_path = await copy_and_analyse_asset(ctx, asset_path, user_provided_data)
+        result = await analyze_asset(asset_path, ctx, user_provided_data)
+
+    await result.write_edp_to_output()
     # A PDF report should already have been created during normal asset analysis.
     # In this test we explicitly create another HTML and PDF report anyways.
-    edp = read_edp_file(ctx.output_path / json_path)
-    report_input = ReportInput(edp=edp)
+    report_input = ReportInput(edp=result.edp)
 
     report_html = report_output_path / f"{asset_path.name}.html"
     with report_html.open("wb") as file_io:
-        await HtmlReportGenerator().generate(ctx, report_input, ctx.output_path, file_io)
+        await HtmlReportGenerator().generate(ctx, report_input, file_io)
     assert report_html.exists()
 
     report_pdf = report_output_path / f"{asset_path.name}.pdf"
     with report_pdf.open("wb") as file_io:
-        await PdfReportGenerator().generate(ctx, report_input, ctx.output_path, file_io)
+        await PdfReportGenerator().generate(ctx, report_input, file_io)
     assert report_pdf.exists()
 
     pdf_text = read_pdf_text(report_pdf)

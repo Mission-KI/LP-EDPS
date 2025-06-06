@@ -70,6 +70,7 @@ dependencies = [
 [project.scripts]
 edps_download_artifacts = "edps.service:download_artifacts"
 edps_export_openapi_schema = "jobapi.__main__:cmdline_export_openapi_schema"
+edps = "edps.__main__:command_line_interface"
 edps_jobapi = "jobapi.__main__:main"
 edps_pontusx = "pontusx.__main__:main"
 
@@ -119,11 +120,10 @@ extend-select = [
 
 
 [tool.pytest.ini_options]
-log_cli = true
-log_cli_level = "WARNING"
 log_format = "%(asctime)s | %(levelname)s | %(name)s | %(pathname)s:%(lineno)d | - %(message)s"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore::matplotlib._api.deprecation.MatplotlibDeprecationWarning",
@@ -173,6 +173,10 @@ ignore-packages = [
 partial-match = true
 
 [tool.coverage.run]
+source = ["./src"]
+# The omit section handles a bug in opencv-python. They accidentally deliver
+# pyc files for py files that do not exist anymore.
+omit = ["config.py", "config-3.py"]
 relative_files = true
 
 [tool.uv.sources]
